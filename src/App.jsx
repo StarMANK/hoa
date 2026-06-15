@@ -79,7 +79,7 @@ const chapters = [
   },
 ];
 
-const discordUrl = 'https://discord.gg/hallofapes';
+const discordUrl = 'https://discord.gg/E7xcUNAGFD';
 
 function PrimitiveArt({ type }) {
   return (
