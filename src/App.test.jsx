@@ -15,7 +15,7 @@ describe('Hall Of Apes landing page', () => {
     expect(screen.getByText(/Dari BLG ke HoA/i)).toBeInTheDocument();
     expect(screen.getAllByText(/Blasteran Gorilla Babi/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/JOSGC/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole('link', { name: /Join Kawanan/i })[0]).toHaveAttribute('href', 'https://discord.gg/hallofapes');
+    expect(screen.getAllByRole('link', { name: /Join Kawanan/i })[0]).toHaveAttribute('href', 'https://discord.gg/E7xcUNAGFD');
   });
 
   it('links players to the Hall Of Apes Discord', () => {
@@ -23,11 +23,11 @@ describe('Hall Of Apes landing page', () => {
 
     expect(screen.getByRole('link', { name: /Join Discord/i })).toHaveAttribute(
       'href',
-      'https://discord.gg/hallofapes',
+      'https://discord.gg/E7xcUNAGFD',
     );
     expect(screen.getByRole('link', { name: /Join Kawanan/i })).toHaveAttribute(
       'href',
-      'https://discord.gg/hallofapes',
+      'https://discord.gg/E7xcUNAGFD',
     );
   });
 

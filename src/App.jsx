@@ -1,4 +1,4 @@
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import logoUrl from '../hoa_logo.png';
 
 const chapters = [
@@ -95,8 +95,38 @@ export default function App() {
   const [cursor, setCursor] = useState({ x: 28, y: 28 });
   const [active, setActive] = useState('home');
 
+  useEffect(() => {
+    // Prevent browser auto-scroll on refresh and force top/home
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // Clean up hash from URL to prevent page starting at timeline section on refresh
+    if (window.location.hash) {
+      window.history.replaceState(null, null, window.location.pathname);
+    }
+
+    // Scroll to top after browser native rendering settling
+    const timer = setTimeout(() => {
+      if (typeof window.scrollTo === 'function' && !navigator.userAgent.includes('jsdom')) {
+        window.scrollTo(0, 0);
+      }
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   function handleMouseMove(event) {
     setCursor({ x: event.clientX, y: event.clientY });
+  }
+
+  function handleNavClick(event, id) {
+    event.preventDefault();
+    setActive(id);
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   return (
@@ -110,7 +140,7 @@ export default function App() {
         <a
           className={active === 'home' ? 'is-active' : ''}
           href="#home"
-          onClick={() => setActive('home')}
+          onClick={(e) => handleNavClick(e, 'home')}
         >
           <span>HOME</span>
         </a>
@@ -119,7 +149,7 @@ export default function App() {
             className={active === chapter.id ? 'is-active' : ''}
             href={`#${chapter.id}`}
             key={chapter.id}
-            onClick={() => setActive(chapter.id)}
+            onClick={(e) => handleNavClick(e, chapter.id)}
           >
             <span>{chapter.nav}</span>
           </a>
