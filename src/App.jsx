@@ -1,234 +1,97 @@
-import { useState, useEffect, Fragment } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import logoUrl from '../hoa_logo.png';
+import {
+  brand,
+  chapters,
+  discordUrl,
+  footer,
+  hero,
+  join,
+} from './data/content.js';
+import { useActiveSection, usePointerVars, useReducedMotion, useRevealRoot, useScrollGlow } from './hooks/useMotion.js';
+import { EmberField, ScrollMeter, Seam, WallLayers } from './components/World.jsx';
+import { DataBand, Footer, Genres, Hero, Join, Rail, Rules, Trail } from './components/Sections.jsx';
 
-const chapters = [
-  {
-    id: 'origin',
-    nav: '2024',
-    number: '01',
-    year: '2024',
-    kicker: 'Origin Trail',
-    title: 'BLG Dibentuk',
-    body:
-      'Sekelompok teman dengan passion tinggi bermain Squad dan milsim membangun gaya main sendiri. Dari sini lahir BLG, Blasteran Gorilla Babi.',
-    art: 'handprint',
-  },
-  {
-    id: 'marks',
-    nav: 'BLG',
-    number: '02',
-    year: 'BLG',
-    kicker: 'Old Symbols',
-    title: 'Gorilla, Babi, Segitiga',
-    body: (
-      <span className="symbol-grid">
-        <span className="symbol-item">
-          <span className="symbol-icon">🦍</span>
-          <span className="symbol-text">
-            <strong>Gorilla & Babi:</strong> Kekuatan & tekad baja.
-          </span>
-        </span>
-        <span className="symbol-item">
-          <span className="symbol-icon">🔺</span>
-          <span className="symbol-text">
-            <strong>Segitiga:</strong> Pendiri (smbdy, Teree, BlackRaiderID).
-          </span>
-        </span>
-        <span className="symbol-item">
-          <span className="symbol-icon">🃏</span>
-          <span className="symbol-text">
-            <strong>Ace of Spades:</strong> Teror & intimidasi musuh.
-          </span>
-        </span>
-      </span>
-    ),
-    art: 'tools',
-  },
-  {
-    id: 'josgc',
-    nav: 'JOSGC',
-    number: '03',
-    year: 'JOSGC',
-    kicker: 'Milsim Ground',
-    title: 'Kawanan Tumbuh',
-    body:
-      'BLG berkembang pesat di scene milsim, terutama di JOSGC. Nama lama makin dikenal, tapi ambisi kawanan mulai lebih besar.',
-    art: 'trail',
-  },
-  {
-    id: 'beyond',
-    nav: 'Beyond',
-    number: '04',
-    year: 'FPS+',
-    kicker: 'Beyond FPS',
-    title: 'Lintas Genre',
-    body:
-      'Survival, racing, co-op, dan game lain mulai masuk. Komunitas butuh identitas yang bisa merangkul semua genre dan semua pemain.',
-    art: 'bones',
-  },
-  {
-    id: 'hoa',
-    nav: 'HoA',
-    number: '05',
-    year: 'HoA',
-    kicker: 'Hall Of Apes',
-    title: 'Nama Baru, Api Sama',
-    body:
-      'BLG berevolusi menjadi Hall Of Apes. Logo baru dan nama baru, tapi persaudaraan, skill, dan keseruan tetap sama.',
-    art: 'ape',
-  },
-];
-
-const discordUrl = 'https://discord.gg/E7xcUNAGFD';
-
-function PrimitiveArt({ type }) {
-  return (
-    <div className={`primitive-art primitive-art--${type}`} aria-hidden="true">
-      <span />
-      <span />
-      <span />
-    </div>
-  );
-}
+const navItems = [{ id: 'home', nav: 'HOME' }, ...chapters.map((c) => ({ id: c.id, nav: c.nav }))];
 
 export default function App() {
-  const [cursor, setCursor] = useState({ x: 28, y: 28 });
+  const reduced = useReducedMotion();
   const [active, setActive] = useState('home');
+  const sectionIds = useMemo(() => navItems.map((item) => item.id), []);
+
+  const revealRef = useRevealRoot();
+  const scrollRef = useScrollGlow(reduced);
+  const { ref: pointerRef, bind } = usePointerVars({ reduced });
 
   useEffect(() => {
-    // Prevent browser auto-scroll on refresh and force top/home
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';
     }
-
-    // Clean up hash from URL to prevent page starting at timeline section on refresh
     if (window.location.hash) {
       window.history.replaceState(null, null, window.location.pathname);
     }
-
-    // Scroll to top after browser native rendering settling
     const timer = setTimeout(() => {
-      if (typeof window.scrollTo === 'function' && !navigator.userAgent.includes('jsdom')) {
-        window.scrollTo(0, 0);
-      }
+      if (!navigator.userAgent.includes('jsdom')) window.scrollTo(0, 0);
     }, 0);
-
     return () => clearTimeout(timer);
   }, []);
 
-  function handleMouseMove(event) {
-    setCursor({ x: event.clientX, y: event.clientY });
-  }
+  const observed = useActiveSection(sectionIds);
+
+  useEffect(() => {
+    if (observed) setActive(observed);
+  }, [observed]);
+
+  const setRefs = useCallback(
+    (node) => {
+      revealRef(node);
+      scrollRef(node);
+      pointerRef(node);
+    },
+    [revealRef, scrollRef, pointerRef],
+  );
 
   function handleNavClick(event, id) {
     event.preventDefault();
     setActive(id);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
+    document.getElementById(id)?.scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'start',
+    });
   }
 
   return (
-    <main className="origin-site" aria-label="HoA origin timeline" onMouseMove={handleMouseMove}>
-      <div className="cursor-mark" data-testid="cursor-mark" style={{ '--x': `${cursor.x}px`, '--y': `${cursor.y}px` }}>
-        HoA
-      </div>
-      <div className="background-trail" aria-hidden="true" />
-      <div className="idle-embers" aria-hidden="true">
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-        <span className="ember" />
-      </div>
+    <main
+      className="world"
+      ref={setRefs}
+      aria-label="Hall Of Apes origin wall"
+      onPointerMove={bind.onPointerMove}
+      onPointerLeave={bind.onPointerLeave}
+    >
+      <a className="sr-only" href="#trail">
+        Lewati ke origin trail
+      </a>
 
-      <nav className="chapter-nav" aria-label="Chapter timeline">
-        <a
-          className={active === 'home' ? 'is-active' : ''}
-          href="#home"
-          onClick={(e) => handleNavClick(e, 'home')}
-        >
-          <span>HOME</span>
-        </a>
-        {chapters.map((chapter) => (
-          <a
-            className={active === chapter.id ? 'is-active' : ''}
-            href={`#${chapter.id}`}
-            key={chapter.id}
-            onClick={(e) => handleNavClick(e, chapter.id)}
-          >
-            <span>{chapter.nav}</span>
-          </a>
-        ))}
-      </nav>
+      <WallLayers />
+      <EmberField />
+      <div className="cursor-flare" aria-hidden="true" />
+      <ScrollMeter />
 
-      <section className="hero-panel" id="home" aria-labelledby="hero-title" onMouseEnter={() => setActive('home')}>
-        <div className="hero-mark">
-          <div className="hero-mark-inner">
-            <img className="hero-logo" src={logoUrl} alt="Hall Of Apes logo" />
-          </div>
-        </div>
-        <div className="hero-copy">
-          <p className="microcopy">Writings on the wall</p>
-          <h1 id="hero-title">Hall Of Apes</h1>
-          <p className="hero-path">BLG -&gt; HoA</p>
-          <p className="hero-text">
-            Dari BLG ke HoA, cerita evolusi kawanan dari milsim menuju komunitas
-            lintas game. Scroll turun, baca ukiran, ikuti jejak simbol lama.
-          </p>
-          <a className="discord-cta" href={discordUrl}>Join Discord</a>
-        </div>
-      </section>
+      <Rail items={navItems} active={active} onNavigate={handleNavClick} />
 
-      <h2 className="sr-only">Origin Trail</h2>
-      <section className="journey" aria-label="Vertical cave timeline">
-        {/* Background sliding marquees */}
-        <div className="journey-marquee marquee-1" aria-hidden="true">
-          <span>BLG EVOLUTION • BLASTERAN GORILLA BABI • ORIGIN TRAIL • 2024 • JOSGC • BEYOND FPS • HALL OF APES • </span>
-          <span>BLG EVOLUTION • BLASTERAN GORILLA BABI • ORIGIN TRAIL • 2024 • JOSGC • BEYOND FPS • HALL OF APES • </span>
-        </div>
-        <div className="journey-marquee marquee-2" aria-hidden="true">
-          <span>HALL OF APES • THE FIRE STILL BURNS • MASUK KAWANAN • DISCORD • PERSAUDARAAN • SKILL • FUN • </span>
-          <span>HALL OF APES • THE FIRE STILL BURNS • MASUK KAWANAN • DISCORD • PERSAUDARAAN • SKILL • FUN • </span>
-        </div>
+      <Hero discord={discordUrl} hero={hero} brand={brand} logoUrl={logoUrl} />
+      <Seam />
+      <Trail sections={chapters} />
+      <DataBand />
+      <Genres />
+      <Rules />
+      <Join join={join} discord={discordUrl} />
+      <Footer footer={footer} />
 
-        {chapters.map((chapter) => (
-          <Fragment key={chapter.id}>
-            <article className="story-panel" id={chapter.id} onMouseEnter={() => setActive(chapter.id)}>
-              <div className="split-year" aria-hidden="true">
-                {chapter.year.split('').map((char, index) => (
-                  <span key={`${chapter.id}-${char}-${index}`}>{char}</span>
-                ))}
-              </div>
-              <div className="panel-copy">
-                <p className="microcopy">{chapter.number} / {chapter.kicker}</p>
-                <h2>{chapter.title}</h2>
-                <p>{chapter.body}</p>
-                <span className="panel-etch" aria-hidden="true">{chapter.nav}</span>
-              </div>
-              <PrimitiveArt type={chapter.art} />
-            </article>
-          </Fragment>
-        ))}
-      </section>
-
-      <section className="final-panel" id="join" aria-labelledby="join-title">
-        <div className="final-panel-content">
-          <p className="microcopy">2026 / Fire still on</p>
-          <h2 id="join-title">Masuk Kawanan</h2>
-          <p>
-            HoA terbuka untuk pemain yang mau main bareng, belajar bareng, dan ikut
-            bikin cerita baru di luar genre lama.
-          </p>
-          <a href={discordUrl}>Join Kawanan</a>
-        </div>
-      </section>
+      <p className="sr-only">
+        Hall Of Apes dulunya BLG, {brand.predecessorLong}. Simbol lama: gorilla,
+        babi, segitiga, dan ace of spades. Markas di Discord.
+      </p>
     </main>
   );
 }

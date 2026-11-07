@@ -1,0 +1,56 @@
+/* Hall Of Apes design tokens.
+   Palette sources:
+   #fcfcfc  sampled from hoa_logo.png (all opaque pixels read #fcfcfc)
+   #0b0b0c  derived: negative space of that same artwork, used for rock plates
+   #f3f0e7  derived: warm bone from the repo's existing --bone #f2f0e8
+   #e63b10  derived: the ember hue already used by the fire motion (#ff5a00), pushed to poster saturation
+   #c9f04a  derived: acid chisel highlight, used only for data marks and active states */
+:root {
+  --ink: #0b0b0c;
+  --ink-2: #16161a;
+  --ink-3: #23232a;
+  --bone: #f3f0e7;
+  --bone-2: #e7e2d4;
+  --bone-3: #d5cfbe;
+  --ember: #e63b10;
+  --ember-hot: #ff7a21;
+  --ember-deep: #8f2205;
+  --acid: #c9f04a;
+  --white: #fcfcfc;
+
+  --wall: var(--bone);
+  --on-wall: var(--ink);
+  --rule: rgba(11, 11, 12, 0.18);
+  --rule-dark: rgba(243, 240, 231, 0.18);
+
+  --font-display: Anton, 'Archivo Black', Impact, sans-serif;
+  --font-body: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  --shell: min(1320px, calc(100% - 2.5rem));
+  --edge: clamp(1.1rem, 4vw, 3.2rem);
+  --step-hero: clamp(4.2rem, 19vw, 17rem);
+  --step-poster: clamp(2.6rem, 9vw, 8rem);
+  --step-h2: clamp(2.2rem, 6vw, 5.2rem);
+  --step-h3: clamp(1.4rem, 2.6vw, 2.1rem);
+  --step-body: clamp(1rem, 1.15vw, 1.18rem);
+  --step-micro: clamp(0.66rem, 0.75vw, 0.76rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.83, 0, 0.17, 1);
+  --dur-fast: 0.22s;
+  --dur: 0.5s;
+  --dur-slow: 0.9s;
+
+  --px: 0;
+  --py: 0;
+  --gx: 50vw;
+  --gy: 40vh;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --mx: 0px;
+  --my: 0px;
+  --scroll-glow: 0;
+  --scroll-progress: 0;
+  --scroll-dir: 0;
+}
