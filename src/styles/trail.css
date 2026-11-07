@@ -74,7 +74,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  min-height: clamp(14rem, 26vw, 22rem);
+  min-height: clamp(16rem, 30vw, 26rem);
 }
 
 .chapter__mark::before {
@@ -86,13 +86,16 @@
 }
 
 .mark {
-  width: min(84%, 24rem);
+  width: min(92%, 26rem);
   height: auto;
   color: var(--bone);
   overflow: visible;
+  filter: drop-shadow(0 0 1.4rem rgba(230, 59, 16, 0.35));
 }
 
-.chapter:nth-child(odd) .mark { color: var(--ember-hot); }
+.mark .carve { stroke-width: 3.2; }
+
+.chapter:nth-child(even) .mark { color: var(--ember-hot); }
 
 .chapter__copy {
   position: relative;
@@ -160,28 +163,45 @@
 
 .chapter__glyphs {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 0.9rem;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
 }
 
 .glyph-tile {
   display: grid;
-  gap: 0.5rem;
-  padding: 1rem;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  grid-template-areas:
+    'icon name'
+    'icon text';
+  column-gap: 1rem;
+  row-gap: 0.15rem;
+  align-items: center;
+  padding: 0.75rem 0.95rem;
   border: 1px solid rgba(243, 240, 231, 0.14);
   background: rgba(243, 240, 231, 0.03);
+  transition: border-color var(--dur-fast) var(--ease-out), transform var(--dur-fast) var(--ease-out);
 }
 
-.glyph { width: 3.2rem; color: var(--bone); }
+.glyph-tile:hover { border-color: var(--ember); transform: translateX(4px); }
+
+.glyph { color: var(--bone); }
+.glyph-tile .glyph { grid-area: icon; width: 2.4rem; height: auto; }
 .glyph-tile:hover .glyph { color: var(--ember-hot); }
 .glyph-tile__name {
+  grid-area: name;
   margin: 0;
   font-family: var(--font-body);
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
 }
-.glyph-tile p { margin: 0; font-size: 0.86rem; color: rgba(243, 240, 231, 0.68); line-height: 1.5; }
+.glyph-tile p {
+  grid-area: text;
+  margin: 0;
+  font-size: 0.86rem;
+  color: rgba(243, 240, 231, 0.68);
+  line-height: 1.5;
+}
 
 /* Data band */
 .data {
@@ -349,9 +369,14 @@
   gap: clamp(2rem, 5vw, 4rem);
   align-items: center;
   padding-block: clamp(4.5rem, 12vw, 9rem);
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.join__title { font-size: var(--step-hero); letter-spacing: -0.03em; }
+.join__title {
+  font-size: var(--step-poster);
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
 .join__title .word--hollow { color: transparent; -webkit-text-stroke: 2px var(--bone); }
 
 .join__card {

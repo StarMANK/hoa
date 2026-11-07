@@ -9,8 +9,8 @@ const stroke = {
   vectorEffect: 'non-scaling-stroke',
 };
 
-function Carve({ d, extra = {} }) {
-  return <path {...stroke} pathLength="1" className="carve" d={d} {...extra} />;
+function Carve({ d, ...rest }) {
+  return <path {...stroke} pathLength="1" className="carve" d={d} {...rest} />;
 }
 
 function Handprint() {
@@ -41,7 +41,6 @@ function Glyphs() {
       <Carve d="M104 112c3 4 5 6 8 6s5-2 8-6" />
       <Carve d="M22 122l14-22 14 22Z" />
       <Carve d="M29 116l7-11 7 11" />
-      <Carve d="M124 34l10 18-20 0Z" />
     </svg>
   );
 }
@@ -59,14 +58,23 @@ function Trail() {
   );
 }
 
+// One cartoon bone as a single closed outline: shaft walls plus four condyle
+// arcs. Kept as one path so the carve reveal draws one continuous object.
+function Bone({ transform }) {
+  return (
+    <Carve
+      transform={transform}
+      d="M50 62a12 12 0 1 0-9 20 12 12 0 1 0 9 20h60a12 12 0 1 0 9-20 12 12 0 1 0-9-20Z"
+    />
+  );
+}
+
 function Bones() {
   return (
     <svg className="mark" viewBox="0 0 160 140" aria-hidden="true">
-      <Carve d="M30 74c0-8 6-14 14-14h64c8 0 14 6 14 14s-6 14-14 14H44c-8 0-14-6-14-14Z" />
-      <Carve d="M24 56c8-6 16-2 16 6M24 92c8 6 16 2 16-6M140 56c-8-6-16-2-16 6M140 92c-8 6-16 2-16-6" />
-      <Carve d="M62 118c0-10 8-18 18-18s18 8 18 18" />
-      <Carve d="M68 128c-3-6-2-10 2-12M96 128c3-6 2-10-2-12" />
-      <Carve d="M74 112c3 4 13 4 16 0" />
+      <Bone transform="translate(0 4)" />
+      <Bone transform="translate(118 26) rotate(-34) scale(0.42) translate(-80 -79)" />
+      <Carve d="M28 120h20M116 124h18M46 130h10" />
     </svg>
   );
 }
@@ -75,8 +83,8 @@ function ApeMark() {
   return (
     <svg className="mark" viewBox="0 0 140 140" aria-hidden="true">
       <Carve d="M26 62c0-22 18-38 44-38s44 16 44 38c0 14-6 26-16 34-8 6-18 10-28 10s-20-4-28-10c-10-8-16-20-16-34Z" />
-      <Carve d="M22 54c-8-4-14-2-16 4-2 8 4 14 14 14" />
-      <Carve d="M118 54c8-4 14-2 16 4 2 8-4 14-14 14" />
+      <Carve d="M29 48c-11-4-19 2-18 11 1 8 10 12 18 8" />
+      <Carve d="M111 48c11-4 19 2 18 11-1 8-10 12-18 8" />
       <Carve d="M38 58c10-6 22-6 28 0M102 58c-10-6-22-6-28 0" />
       <Carve d="M50 84c8 6 32 6 40 0" />
       <Carve d="M56 96c0 6 10 6 14 0M84 96c0 6-10 6-14 0" />

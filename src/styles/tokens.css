@@ -29,8 +29,8 @@
 
   --shell: min(1320px, calc(100% - 2.5rem));
   --edge: clamp(1.1rem, 4vw, 3.2rem);
-  --step-hero: clamp(4.2rem, 19vw, 17rem);
-  --step-poster: clamp(2.6rem, 9vw, 8rem);
+  --step-hero: clamp(3.4rem, 13vw, 12rem);
+  --step-poster: clamp(2.4rem, 8vw, 7rem);
   --step-h2: clamp(2.2rem, 6vw, 5.2rem);
   --step-h3: clamp(1.4rem, 2.6vw, 2.1rem);
   --step-body: clamp(1rem, 1.15vw, 1.18rem);
@@ -52,5 +52,4 @@
   --my: 0px;
   --scroll-glow: 0;
   --scroll-progress: 0;
-  --scroll-dir: 0;
 }

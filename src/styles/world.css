@@ -7,6 +7,7 @@
   position: relative;
   min-height: 100vh;
   isolation: isolate;
+  overflow-x: clip;
 }
 
 .wall-surface,
@@ -46,7 +47,7 @@
 
 .wall-glyph {
   position: absolute;
-  color: rgba(11, 11, 12, 0.075);
+  color: rgba(11, 11, 12, 0.12);
   transform: translate3d(calc(var(--px) * var(--depth, 1rem)), calc(var(--py) * var(--depth, 1rem)), 0);
   transition: transform 1.6s var(--ease-out);
   will-change: transform;
@@ -58,12 +59,13 @@
   right: -16vw;
   animation: glyph-drift 44s linear infinite;
 }
+.wall-glyph .glyph { width: 100%; height: auto; }
 
 .wall-glyph--mid {
   width: min(58vw, 44rem);
   bottom: -18vh;
   left: -14vw;
-  color: rgba(230, 59, 16, 0.09);
+  color: rgba(230, 59, 16, 0.16);
   animation: glyph-drift 62s linear infinite reverse;
 }
 
@@ -134,7 +136,7 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(18rem 18rem at var(--gx) var(--gy), rgba(230, 59, 100, 0) 0%, rgba(255, 122, 33, 0.09) 45%, transparent 70%);
+  background: radial-gradient(20rem 20rem at var(--gx) var(--gy), rgba(255, 122, 33, 0.14) 0%, rgba(230, 59, 16, 0.07) 42%, transparent 70%);
   transition: opacity var(--dur) var(--ease-out);
 }
 
@@ -167,10 +169,11 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.6rem 0.5rem;
-  background: rgba(11, 11, 12, 0.82);
-  color: var(--bone);
+  background: rgba(243, 240, 231, 0.92);
+  color: var(--ink);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(243, 240, 231, 0.14);
+  border: 1px solid rgba(11, 11, 12, 0.22);
+  box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.28);
   transform: translateY(-50%);
 }
 
@@ -185,7 +188,7 @@
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.14em;
-  color: rgba(243, 240, 231, 0.55);
+  color: rgba(11, 11, 12, 0.55);
   transition: color var(--dur-fast) var(--ease-out);
 }
 
@@ -198,7 +201,7 @@
 }
 
 .rail a:hover,
-.rail a:focus-visible { color: var(--bone); outline: none; }
+.rail a:focus-visible { color: var(--ink); outline: none; }
 
 .rail a.is-active { color: var(--ember-hot); }
 
@@ -215,22 +218,24 @@
   min-height: 100svh;
   display: grid;
   align-content: center;
-  gap: clamp(1.6rem, 3vw, 2.4rem);
-  padding-block: clamp(6rem, 14vh, 9rem) clamp(3rem, 8vh, 6rem);
+  gap: clamp(1rem, 1.8vw, 1.4rem);
+  padding-block: clamp(4rem, 10vh, 7rem) clamp(3rem, 7vh, 5rem);
   perspective: 1200px;
 }
 
 .hero__plate {
   position: absolute;
   z-index: -1;
-  top: clamp(4rem, 9vh, 7rem);
-  right: -6vw;
-  width: min(52vw, 34rem);
+  top: 44%;
+  right: clamp(7.5rem, 11vw, 10.5rem);
+  width: min(40vw, 27rem);
   aspect-ratio: 1;
   background: linear-gradient(152deg, var(--ink-3) 0%, var(--ink) 52%, #050506 100%);
   clip-path: polygon(13% 4%, 47% 0%, 79% 7%, 97% 31%, 89% 63%, 94% 86%, 62% 100%, 27% 95%, 6% 82%, 0% 44%, 4% 20%);
-  transform: translate3d(calc(var(--px) * 2.4rem), calc(var(--py) * 2rem), 0);
-  transition: transform 1s var(--ease-out);
+  transform: perspective(1200px)
+    translate3d(calc(var(--px) * 2.4rem), calc(-50% + var(--py) * 2rem), 0)
+    rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+  transition: transform 0.6s var(--ease-out);
   overflow: hidden;
 }
 
@@ -245,9 +250,12 @@
 .hero__logo {
   position: absolute;
   inset: 14%;
-  width: 72%;
+  width: auto;
   height: auto;
+  max-width: 72%;
+  max-height: 62%;
   margin: auto;
+  object-fit: contain;
   filter: drop-shadow(0 1.4rem 2.2rem rgba(0, 0, 0, 0.85));
   animation: logo-carve 1.5s var(--ease-out) both;
 }
@@ -287,6 +295,7 @@
 .hero__title .word {
   display: block;
   overflow: hidden;
+  min-height: 0.82em;
 }
 
 .hero__title .char {
@@ -412,11 +421,15 @@
     top: auto;
     right: auto;
     width: min(78vw, 26rem);
+    transform: none;
     margin-inline: auto;
     order: -1;
   }
 
-  .hero { text-align: left; }
+  .hero {
+    text-align: left;
+    padding-bottom: 7.5rem;
+  }
   .hero__title .word--outline { text-align: left; }
 
   .rail {

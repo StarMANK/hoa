@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App.jsx';
 
@@ -86,5 +86,27 @@ describe('Hall Of Apes origin wall', () => {
 
     expect(document.querySelectorAll('.reveal:not(.is-in)').length).toBe(0);
     expect(document.querySelectorAll('.chapter:not(.is-in)').length).toBe(0);
+  });
+
+  it('keeps pointer parallax vars inside the range CSS multiplies by rem', async () => {
+    render(<App />);
+    const world = document.querySelector('.world');
+
+    // Rules consume these as calc(var(--px) * 1.6rem). Writing raw client
+    // pixels here shifted the parallax layers about 27000px off screen.
+    // jsdom lacks PointerEvent, so dispatch a MouseEvent under that name.
+    await act(async () => {
+      fireEvent(
+        world,
+        new MouseEvent('pointermove', { clientX: 820, clientY: 640, bubbles: true }),
+      );
+      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+    });
+
+    ['--px', '--py'].forEach((name) => {
+      const value = Number(world.style.getPropertyValue(name));
+      expect(Number.isFinite(value)).toBe(true);
+      expect(Math.abs(value)).toBeLessThanOrEqual(1);
+    });
   });
 });
