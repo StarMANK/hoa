@@ -135,6 +135,18 @@ export default function App() {
         HoA
       </div>
       <div className="background-trail" aria-hidden="true" />
+      <div className="idle-embers" aria-hidden="true">
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+        <span className="ember" />
+      </div>
 
       <nav className="chapter-nav" aria-label="Chapter timeline">
         <a

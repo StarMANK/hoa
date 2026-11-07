@@ -797,6 +797,57 @@ h2 {
   .primitive-art { min-height: 13rem; transform: scale(0.86); transform-origin: left center; }
   .symbol-list { grid-template-columns: 1fr; }
 }
+/* Active mode animations */
+.idle-embers {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.86;
+}
+
+.ember {
+  position: absolute;
+  background: radial-gradient(circle, #ffffff 0%, rgba(255, 110, 0, 0.95) 25%, rgba(255, 40, 0, 0.4) 65%, transparent 90%);
+  border-radius: 50%;
+  bottom: -50px;
+  filter: blur(1.5px);
+  box-shadow: 0 0 16px rgba(255, 90, 0, 0.75), 0 0 6px rgba(255, 50, 0, 0.4);
+  animation: ember-float 9s linear infinite;
+}
+
+.ember:nth-child(1) { left: 12%; width: 10px; height: 10px; animation-delay: 0s; animation-duration: 7s; }
+.ember:nth-child(2) { left: 38%; width: 14px; height: 14px; animation-delay: 1.5s; animation-duration: 9.5s; }
+.ember:nth-child(3) { left: 68%; width: 8px; height: 8px; animation-delay: 3s; animation-duration: 6s; }
+.ember:nth-child(4) { left: 24%; width: 12px; height: 12px; animation-delay: 4s; animation-duration: 8s; }
+.ember:nth-child(5) { left: 82%; width: 9px; height: 9px; animation-delay: 5.5s; animation-duration: 11s; }
+.ember:nth-child(6) { left: 52%; width: 11px; height: 11px; animation-delay: 2s; animation-duration: 7.5s; }
+.ember:nth-child(7) { left: 18%; width: 15px; height: 15px; animation-delay: 5s; animation-duration: 10s; }
+.ember:nth-child(8) { left: 91%; width: 8px; height: 8px; animation-delay: 1s; animation-duration: 8.5s; }
+.ember:nth-child(9) { left: 60%; width: 13px; height: 13px; animation-delay: 3.5s; animation-duration: 9s; }
+.ember:nth-child(10) { left: 76%; width: 10px; height: 10px; animation-delay: 6s; animation-duration: 7s; }
+
+@keyframes ember-float {
+  0% { transform: translateY(0) translateX(0); opacity: 0; }
+  10% { opacity: 0.85; }
+  90% { opacity: 0.5; }
+  100% { transform: translateY(-110vh) translateX(50px); opacity: 0; }
+}
+
+.panel-copy {
+  animation: stone-breathe 6s ease-in-out infinite alternate;
+}
+
+@keyframes stone-breathe {
+  0% {
+    transform: translateY(0);
+    box-shadow: inset 0 0 2rem rgba(0,0,0,0.7), 0 2rem 4rem rgba(0,0,0,0.54);
+  }
+  100% {
+    transform: translateY(-4px);
+    box-shadow: inset 0 0 2.2rem rgba(0,0,0,0.6), 0 2.2rem 4.5rem rgba(0,0,0,0.6);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
