@@ -1,68 +1,97 @@
-// Does the hero blurb and scroll hint actually collide with anything on a
-// phone? They were hidden to clear the fixed chapter rail, but that was an
-// inference, not a request. Restore them and measure real overlap instead of
-// arguing about it.
+// The phone hero hides .hero__blurb and .scroll-hint. Measured, that was not
+// paranoia: the hero is 956px tall on an 844px viewport, so anything at its foot
+// lands under the fixed rail (top 796) - the blurb by 48px, the hint by 10px.
+// But hiding user copy to solve a layout collision is a big answer. These
+// variants try to keep the copy by moving it instead.
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const EXE =
   process.env.CHROME_PATH ??
   '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
 
+const outDir = process.env.OUT_DIR ?? new URL('../shots-stack/', import.meta.url).pathname;
+mkdirSync(outDir, { recursive: true });
+
+const variants = [
+  { name: 'a-hidden', css: '' },
+  {
+    // Put the blurb above the buttons rather than below them.
+    name: 'b-order',
+    css: `
+      .hero__blurb { display: block !important; order: -1; }
+      .scroll-hint { display: none !important; }`,
+  },
+  {
+    // Keep the reading order, tighten the hero's bottom room so the blurb
+    // clears the rail, and drop the scroll hint (redundant on touch).
+    name: 'c-tighten',
+    css: `
+      .hero__blurb { display: block !important; margin-bottom: 0; }
+      .hero { padding-bottom: 0; }
+      .scroll-hint { display: none !important; }`,
+  },
+  {
+    // Everything back, including the hint, with the hero ending above the rail.
+    name: 'd-all',
+    css: `
+      .hero__blurb { display: block !important; order: -1; margin-bottom: 0; }
+      .scroll-hint { display: flex !important; bottom: 10rem; }`,
+  },
+];
+
 const browser = await chromium.launch({
   executablePath: EXE,
   args: ['--no-sandbox', '--disable-dev-shm-usage', '--force-color-profile=srgb'],
 });
 
-const page = await (
-  await browser.newContext({ viewport: { width: 390, height: 844 } })
-).newPage();
-await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
-await page.waitForTimeout(1200);
+for (const v of variants) {
+  const page = await (
+    await browser.newContext({ viewport: { width: 390, height: 844 } })
+  ).newPage();
+  await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
+  if (v.css) await page.addStyleTag({ content: v.css });
+  await page.waitForTimeout(1400);
 
-const measure = () =>
-  page.evaluate(() => {
+  const m = await page.evaluate(() => {
+    const rail = document.querySelector('.rail').getBoundingClientRect();
     const box = (sel) => {
       const n = document.querySelector(sel);
-      if (!n) return null;
+      if (!n) return { sel, missing: true };
       const r = n.getBoundingClientRect();
-      return { sel, x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), b: Math.round(r.bottom) };
+      const cs = getComputedStyle(n);
+      return {
+        sel,
+        display: cs.display,
+        y: Math.round(r.y),
+        b: Math.round(r.bottom),
+        // Positive means it clears the fixed rail; negative means overlap.
+        vsRail: Math.round(rail.top - r.bottom),
+        inViewport: r.top < window.innerHeight && r.bottom > 0,
+      };
     };
-    const rail = box('.rail');
-    const blurb = box('.hero__blurb');
-    const hint = box('.scroll-hint');
-    const cta = box('.hero__actions');
-    const title = box('.hero__title');
-    const overlaps = (a, b) =>
-      a && b && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.b && a.y + (b.b - b.y) > b.y
-        ? Math.round(Math.min(a.b, b.b) - Math.max(a.y, b.y))
-        : 0;
     return {
-      rail,
-      blurb: { ...blurb, display: getComputedStyle(document.querySelector('.hero__blurb')).display },
-      hint: { ...hint, display: getComputedStyle(document.querySelector('.scroll-hint')).display },
-      cta,
-      title,
-      railTop: rail?.y,
-      blurbBottomVsRailTop: rail && blurb ? Math.round(rail.y - blurb.b) : null,
-      hintBottomVsRailTop: rail && hint ? Math.round(rail.y - hint.b) : null,
-      ctaBottomVsRailTop: rail && cta ? Math.round(rail.y - cta.b) : null,
-      heroHeight: Math.round(document.querySelector('.hero').getBoundingClientRect().height),
-      vh: window.innerHeight,
+      railTop: Math.round(rail.top),
+      blurb: box('.hero__blurb'),
+      hint: box('.scroll-hint'),
+      cta: box('.hero__actions'),
+      heroH: Math.round(document.querySelector('.hero').getBoundingClientRect().height),
     };
   });
 
-console.log('as shipped:', JSON.stringify(await measure(), null, 2));
+  const clash = [m.blurb, m.hint].filter((b) => !b.missing && b.display !== 'none' && b.vsRail < 0);
+  console.log(
+    `[${v.name}] railTop=${m.railTop} heroH=${m.heroH} clash=${clash.map((c) => `${c.sel}(${c.vsRail})`).join(' ') || 'none'}`,
+  );
+  console.log(
+    `   blurb ${m.blurb.display} y=${m.blurb.y} b=${m.blurb.b} vsRail=${m.blurb.vsRail} visible=${m.blurb.inViewport}`,
+  );
+  console.log(`   hint  ${m.hint.display} y=${m.hint.y} vsRail=${m.hint.vsRail}`);
 
-await page.addStyleTag({
-  content: '.hero__blurb, .scroll-hint { display: revert !important; }',
-});
-await page.waitForTimeout(600);
-const restored = await measure();
-console.log('\nwith both restored:', JSON.stringify(restored, null, 2));
-console.log(
-  `\nblurb bottom -> rail top gap: ${restored.blurbBottomVsRailTop}px  hint gap: ${restored.hintBottomVsRailTop}px  cta gap: ${restored.ctaBottomVsRailTop}px`,
-);
-console.log(`negative gap = overlap. rail top = ${restored.railTop}, viewport = ${restored.vh}`);
+  await page.screenshot({ path: join(outDir, `mobile-hero-${v.name}.png`) });
+  await page.context().close();
+}
 
-await page.screenshot({ path: new URL(process.env.SHOT ?? '', `file://${process.env.JCODE_SCRATCH_DIR}/mobile-blurb.png`).pathname });
 await browser.close();
+console.log(`\nframes in ${outDir}`);

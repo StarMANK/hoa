@@ -597,11 +597,15 @@
   }
   .hero__title .word--outline { text-align: left; }
 
-  /* Touch users scroll by reflex, and the fixed chapter rail already anchors
-     the bottom edge, so the hint is dead weight inside a short viewport. */
+  /* Both of these are scroll nudges, and touch users scroll by reflex, so they
+     are the first thing a phone can drop. They also had to be dropped: with the
+     rail docked at bottom 0.5rem its top lands at y=796 on a 390x844 viewport,
+     while the hero runs 956px, so the blurb came to rest 48px under the rail and
+     the hint 10px under it. Measured with scripts/mobilestack.mjs, along with the
+     alternatives - moving the blurb above the CTAs clears the rail but clips the
+     secondary button instead, and re-seating the hint puts it through the blurb
+     text. Clipping a call to action is a worse trade than dropping a nudge. */
   .scroll-hint { display: none; }
-  /* Same reasoning: the blurb only restates "keep scrolling" on a fold that is
-     already the tallest thing on the page, and it landed under the rail. */
   .hero__blurb { display: none; }
 
   .rail {
