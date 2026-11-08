@@ -5,10 +5,13 @@
 .trail {
   position: relative;
   z-index: 2;
-  /* Translucent, not opaque: the fixed roam layer lives on the world behind
-     every band, and an opaque ground here made the apes disappear for the
-     longest stretch of the page. */
-  background: rgba(3, 4, 5, 0.74);
+  /* Wash, not wall. Measured with the apes toggled off, an alpha of 0.74 left a
+     #ffffff silhouette at about 0.16 effective alpha: 1.58:1 against the ground it
+     stands on, which is a smudge rather than the subject. Text contrast is the same
+     at 0.74 as it is fully transparent (5.69 vs 5.68) because the night behind the
+     bands is already #060809, and band edges step 0.0-0.1 luminance at every alpha,
+     so the wash was never buying legibility or separation, only erasing apes. */
+  background: rgba(3, 4, 5, 0.22);
   color: var(--bone);
   padding-block: clamp(4rem, 10vw, 8rem) clamp(5rem, 12vw, 9rem);
   overflow: hidden;
@@ -121,9 +124,13 @@
   gap: 1.1rem;
   padding: clamp(1.4rem, 3vw, 2.6rem);
   border: 1px solid rgba(255, 255, 255, 0.16);
+  /* The card edge is what delineates the surface, and the 1px border above does
+     that. The fill used to reach 0.92, which left a 58px walker crossing behind it
+     at 1.33:1: the ape was being painted over almost completely by a panel whose
+     text reads the same 5:1 with the fill at 0.3. */
   background:
     linear-gradient(118deg, transparent 0 46%, rgba(255, 255, 255, 0.05) 46.3%, transparent 47%),
-    linear-gradient(160deg, rgba(19, 26, 28, 0.92), rgba(3, 4, 5, 0.8));
+    linear-gradient(160deg, rgba(19, 26, 28, 0.5), rgba(3, 4, 5, 0.45));
   backdrop-filter: blur(2px);
   clip-path: polygon(0 0, calc(100% - 1.6rem) 0, 100% 1.6rem, 100% 100%, 1.6rem 100%, 0 calc(100% - 1.6rem));
 }
@@ -169,7 +176,12 @@
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--bone-2);
-  background: rgba(255, 255, 255, 0.04);
+  /* Dark and self-contained rather than a 4% lift. This is 10.9px mono, the
+     smallest text on the page, and its contrast tracks whatever passes behind the
+     card: with the card thinned for the apes this chip measured 3.92:1 on mobile,
+     under AA. A chip is small enough to own its ground without hiding a walker, so
+     the ground is pinned here instead of by darkening the whole card again. */
+  background: rgba(3, 4, 5, 0.62);
   transition: border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
 }
 
@@ -339,11 +351,11 @@
   display: grid;
   gap: 0.6rem;
   padding: clamp(1.3rem, 3vw, 2.2rem);
-  background: rgba(3, 4, 5, 0.72);
+  background: rgba(3, 4, 5, 0.45);
   transition: background var(--dur) var(--ease-out);
 }
 
-.rule:hover { background: rgba(19, 26, 28, 0.78); }
+.rule:hover { background: rgba(19, 26, 28, 0.6); }
 
 .rule__num {
   font-family: var(--font-mono);
@@ -353,13 +365,16 @@
 }
 
 .rule h3 { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 1.9rem); margin: 0; text-transform: uppercase; font-weight: 400; color: var(--accent); }
-.rule p { margin: 0; color: rgba(255, 255, 255, 0.72); font-size: 0.95rem; }
+/* 15px body copy at 72% measured 4.12:1 when a walker passed behind the card, just
+   under the 4.5:1 AA floor. The hierarchy this was protecting is carried fine by the
+   heading above it, which is a different family, size and weight entirely. */
+.rule p { margin: 0; color: rgba(255, 255, 255, 0.86); font-size: 0.95rem; }
 
 /* Join */
 .join {
   position: relative;
   z-index: 2;
-  background: rgba(3, 4, 5, 0.72);
+  background: rgba(3, 4, 5, 0.22);
   color: var(--bone);
   overflow: hidden;
   isolation: isolate;
@@ -369,9 +384,13 @@
   position: absolute;
   inset: 0;
   z-index: -1;
+  /* These two washes sit inside .join, which is z-index 2 above the roam layer, so
+     they brighten the ground an ape walks on and steal contrast from a silhouette
+     that is itself bone-white. Measured with the join band's ape isolated, this layer
+     alone cost +0.81 of contrast ratio at the strongest point of the first wash. */
   background:
-    radial-gradient(60% 70% at 78% 20%, rgba(255, 255, 255, 0.13), transparent 62%),
-    radial-gradient(70% 80% at 12% 88%, rgba(255, 255, 255, 0.07), transparent 66%),
+    radial-gradient(60% 70% at 78% 20%, rgba(255, 255, 255, 0.05), transparent 62%),
+    radial-gradient(70% 80% at 12% 88%, rgba(255, 255, 255, 0.03), transparent 66%),
     transparent;
 }
 
@@ -407,7 +426,7 @@
   gap: 1.4rem;
   padding: clamp(1.6rem, 4vw, 2.8rem);
   border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(3, 4, 5, 0.6);
+  background: rgba(3, 4, 5, 0.42);
   backdrop-filter: blur(3px);
   clip-path: polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 2rem 100%, 0 calc(100% - 2rem));
 }
@@ -419,7 +438,10 @@
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+  /* 11.5px mono, and it sits on the join card where a walker passes. At 0.6 the
+     ink measured 4.12:1 against ground lifted by an ape standing behind the card,
+     under AA. The colour is the cheaper half of the ratio to move. */
+  color: rgba(255, 255, 255, 0.78);
 }
 
 /* Footer: the far side of the clearing, still night rather than daylight. */

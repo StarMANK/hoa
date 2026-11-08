@@ -177,7 +177,10 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .section--dark {
-  background: rgba(3, 4, 5, 0.72);
+  /* Kept at the same wash as .trail and .join: these bands are all at z-index 2
+     above the fixed roam layer, so every point of alpha here subtracts directly from
+     the silhouettes crossing behind the copy. See the note in trail.css. */
+  background: rgba(3, 4, 5, 0.22);
   color: var(--bone);
 }
 

@@ -189,11 +189,15 @@ const roamBands = [
   // depth, size (px), how many, cycle length (s), direction, base opacity
   // The bands used to land in the bottom 38% only, so the whole middle of the
   // viewport had no apes at all and the subject vanished mid-scroll. They are
-  // spread from the canopy line down, opacity climbing with nearness.
-  { n: 3, size: 34, dur: 168, dir: 1, opacity: 0.34, top: 40, bob: 0.5 },
-  { n: 2, size: 58, dur: 124, dir: -1, opacity: 0.46, top: 55, bob: 0.8 },
-  { n: 2, size: 104, dur: 88, dir: 1, opacity: 0.62, top: 72, bob: 1 },
-  { n: 1, size: 168, dur: 62, dir: -1, opacity: 0.78, top: 90, bob: 1.4 },
+  // spread from the canopy line down, opacity climbing with nearness. The floor is
+  // set by measurement, not by taste: a walker crossing a content band sits under
+  // that band's wash and its own white haze, and at 0.34 the far band arrived at
+  // 1.03-2.09:1 against the ground it stands on. bandtext.mjs holds every band at
+  // 3:1 or better, WCAG's non-text minimum.
+  { n: 3, size: 34, dur: 168, dir: 1, opacity: 0.62, top: 40, bob: 0.5 },
+  { n: 2, size: 58, dur: 124, dir: -1, opacity: 0.64, top: 55, bob: 0.8 },
+  { n: 2, size: 104, dur: 88, dir: 1, opacity: 0.76, top: 72, bob: 1 },
+  { n: 1, size: 168, dur: 62, dir: -1, opacity: 0.9, top: 90, bob: 1.4 },
 ];
 
 const bandPoses = ['stride', 'carry', 'hunch', 'forage', 'stride', 'hunch', 'carry', 'hunch', 'stride', 'forage'];
