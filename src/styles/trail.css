@@ -43,16 +43,22 @@
 .trail__thread::after {
   content: '';
   position: absolute;
-  left: -1px;
-  width: 4px;
   /* Full-height strip, bead painted inside it, because translateY() percentages
      resolve against the element's own box. Sized to the bead, a percentage would
      move it 22vh at a time and no length of the thread could be named. Sized to
-     the thread, (100% - 22vh) is exactly its travel. */
+     the thread, (100% - 34vh) is exactly its travel. */
   top: 0;
   height: 100%;
-  background: linear-gradient(to bottom, transparent, var(--accent) 50%, transparent) top / 100% 22vh no-repeat;
-  transform: translate3d(0, calc(var(--visible-progress, 0) * (100% - 22vh)), 0);
+  /* Wide enough to carry a halo. The bead was a 4px core alone, which at 4x zoom
+     read as a scratch on film: light that thin has no width to fade into, so it
+     looks like a dead pixel travelling down the page rather than something glowing.
+     The core stays 2px; the glow either side is what makes it light. */
+  left: -11px;
+  width: 24px;
+  background:
+    radial-gradient(closest-side, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.08) 55%, transparent 78%) 0 0 / 100% 34vh no-repeat,
+    linear-gradient(to bottom, transparent, var(--accent) 50%, transparent) center top / 2px 26vh no-repeat;
+  transform: translate3d(0, calc(var(--visible-progress, 0) * (100% - 34vh)), 0);
   filter: blur(0.5px);
 }
 
