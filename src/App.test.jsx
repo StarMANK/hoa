@@ -1,9 +1,29 @@
 import '@testing-library/jest-dom/vitest';
+import { readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import App from './App.jsx';
 
 const DISCORD = 'https://discord.gg/E7xcUNAGFD';
+
+// True when the var() whose name just ended at `from` carries a fallback: a
+// comma at the call's own paren depth, before the closing paren. Nested vars
+// like var(--a, var(--b, 1)) have to be walked by depth or the inner comma is
+// mistaken for the outer one.
+const hasFallback = (text, from) => {
+  let depth = 1;
+  for (let i = from; i < text.length; i += 1) {
+    const ch = text[i];
+    if (ch === '(') depth += 1;
+    else if (ch === ')') {
+      depth -= 1;
+      if (depth === 0) return false;
+    } else if (ch === ',' && depth === 1) return true;
+  }
+  return false;
+};
 
 afterEach(() => {
   cleanup();
@@ -173,5 +193,67 @@ describe('Hall Of Apes origin wall', () => {
     // one x and looks like a single smeared blob.
     const restValues = new Set(walkers.map((n) => n.style.getPropertyValue('--rest')));
     expect(restValues.size).toBe(walkers.length);
+  });
+});
+
+// The accent is the logo, so its value is a measurement, not a taste call, and
+// it drifted once already: the token said #fcfcfc under a comment claiming that
+// was the sample, when every opaque pixel of the mark is #ffffff. jsdom hands
+// back empty strings for anything involving var(), so these read the stylesheet
+// text instead of the DOM - see scripts/palette.mjs for the live-pixel check.
+describe('palette integrity', () => {
+  const readStyles = () => {
+    // import.meta.url goes through Node's fileURLToPath rather than `new URL`:
+    // the URL global under jsdom is jsdom's own, and fs rejects its instances.
+    const dir = join(dirname(fileURLToPath(import.meta.url)), 'styles');
+    const files = ['tokens.css', 'base.css', 'index.css', 'trail.css', 'world.css'];
+    return Object.fromEntries(files.map((f) => [f, readFileSync(join(dir, f), 'utf8')]));
+  };
+  const allStyles = readStyles();
+  const tokens = allStyles['tokens.css'];
+
+  it('matches the accent to the measured logo white', () => {
+    // Sampled with scripts/palette.mjs: 890,036 opaque pixels, one unique
+    // colour, max channel delta 0. Any other value here is an approximation
+    // that someone has had to defend after the fact.
+    expect(tokens).toMatch(/--accent:\s*#ffffff;/);
+  });
+
+  it('keeps every white in the palette at the one logo white', () => {
+    // #fcfcfc and rgba(252,252,252) survived in 60 places alongside a token
+    // that claimed to be the logo. One source means the claim can be checked.
+    // Comments are stripped first: prose about the old value is not a use of it.
+    const drift = Object.entries(allStyles).flatMap(([file, text]) =>
+      (text
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .match(/#fcfcfc|252,\s*252,\s*252/gi) ?? []).map((hit) => `${file}: ${hit}`),
+    );
+    expect(drift).toEqual([]);
+  });
+
+  it('never references a custom property it does not define', () => {
+    // Deleting a token that looked unused took out --canopy, which was live in
+    // world.css: a var() that resolves to nothing silently paints transparent.
+    // An undefined name is only survivable with a fallback, so both halves of
+    // `var(--name, fallback)` have to be looked at, not just the name.
+    const defined = new Set();
+    const calls = [];
+    for (const [file, text] of Object.entries(allStyles)) {
+      for (const m of text.matchAll(/^\s*(--[\w-]+):/gm)) defined.add(m[1]);
+      for (const m of text.matchAll(/var\(\s*(--[\w-]+)/g)) {
+        calls.push({ file, name: m[1], hasFallback: hasFallback(text, m.index + m[0].length) });
+      }
+    }
+    const bare = calls.filter((c) => !defined.has(c.name) && !c.hasFallback);
+    expect(bare.map((c) => `${c.file} ${c.name}`)).toEqual([]);
+  });
+
+  it('keeps declared palette tokens in use', () => {
+    const palette = [...tokens.matchAll(/^\s*(--[\w-]+):\s*(#[0-9a-f]{3,8}|rgba?\()/gmi)].map((m) => m[1]);
+    const others = Object.entries(allStyles).filter(([f]) => f !== 'tokens.css');
+    const stale = palette.filter(
+      (name) => !others.some(([, text]) => text.includes(`var(${name})`) || text.includes(`var(${name} `)),
+    );
+    expect(stale).toEqual([]);
   });
 });

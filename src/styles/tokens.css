@@ -1,41 +1,46 @@
 /* Hall Of Apes design tokens.
-   Palette sources:
-   #fcfcfc  sampled from hoa_logo.png (every 100% opaque pixel reads #fcfcfc)
-   #060809  derived: the night the logo floats on, pushed a shade cool for depth
-   #f3f0e7  derived: warm bone, secondary text on the night bands
-   The logo carries no hue at all, so the accent is the logo itself: bone white.
-   Colour comes from depth (canopy layers fading to black), never from a hue. */
+
+   Measured off hoa_logo.png with scripts/palette.mjs: 890,036 opaque pixels,
+   exactly one colour in them, #ffffff, max channel delta 0, mean saturation 0.
+   The mark is pure white and completely achromatic, so the accent IS the logo:
+   --accent is #ffffff, not an approximation of it. #fcfcfc sat here for a while
+   on a note claiming to be the sample; it was neither the sample nor far enough
+   from it to defend - 1.026:1 against #ffffff, under the ~1.05:1 humans can
+   separate on a uniform field. There is no hue to match, so there is nothing to
+   tune: white. Colour on this page comes from depth (layers fading toward the
+   night), never from a hue. */
 :root {
   --night: #060809;
+  /* Used once each, in a sky gradient and a card fill. Not a ramp. */
   --night-2: #0b0f11;
   --night-3: #131a1c;
-  --night-4: #1d2628;
+  /* The treeline. Foliage sits a hair off the page void so the bands separate
+     from --night without reaching for a hue. */
   --canopy: #070b09;
 
-  --ink: #0b0b0c;
-  --ink-2: #16161a;
-  --ink-3: #23232a;
+  /* --bone is the second voice: same lightness band as the accent but warm, so
+     copy can read as quieter without dropping into a grey that would go blue on
+     the cool night. */
   --bone: #f3f0e7;
   --bone-2: #e7e2d4;
-  --bone-3: #d5cfbe;
-  --white: #fcfcfc;
 
-  /* The single accent. Sampled straight off the logo. */
-  --accent: #fcfcfc;
-  --accent-dim: rgba(252, 252, 252, 0.62);
-  --accent-faint: rgba(252, 252, 252, 0.22);
+  /* The single accent, straight off the logo. 20.1:1 on --night. */
+  --accent: #ffffff;
+  /* 7.4:1 on --night: the floor for the small mono labels that use it. */
+  --accent-dim: rgba(255, 255, 255, 0.62);
 
-  --wall: var(--night);
-  --on-wall: var(--bone);
-  --rule: rgba(252, 252, 252, 0.16);
-  --rule-dark: rgba(252, 252, 252, 0.18);
+  /* Copy on the accent-filled bands inverts to the page void. */
+  --on-accent: var(--night);
+
+  /* Hairlines and rule fills. Was two tokens 0.02 alpha apart, which is below
+     what this background can show. */
+  --rule: rgba(255, 255, 255, 0.17);
 
   --font-display: Anton, 'Archivo Black', Impact, sans-serif;
   --font-body: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
 
   --shell: min(1320px, calc(100% - 2.5rem));
-  --edge: clamp(1.1rem, 4vw, 3.2rem);
   --step-hero: clamp(3.4rem, 13vw, 12rem);
   --step-poster: clamp(2.4rem, 8vw, 7rem);
   --step-h2: clamp(2.2rem, 6vw, 5.2rem);
@@ -55,8 +60,6 @@
   --gy: 40vh;
   --tilt-x: 0deg;
   --tilt-y: 0deg;
-  --mx: 0px;
-  --my: 0px;
   --scroll-glow: 0;
   --scroll-progress: 0;
 }

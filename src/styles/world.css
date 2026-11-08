@@ -1,5 +1,5 @@
 /* The world: a jungle at night. Depth does all the work - the logo is pure
-   #fcfcfc on nothing, so colour never comes from a hue, only from how far away
+   #ffffff on nothing, so colour never comes from a hue, only from how far away
    something is. Far layers sink toward the night, near layers are cut close to
    black, and the apes walk through it as the one persistent subject.
 
@@ -30,8 +30,8 @@
 .world-sky {
   z-index: -6;
   background:
-    radial-gradient(60% 32% at 62% 8%, rgba(252, 252, 252, 0.09) 0%, transparent 62%),
-    radial-gradient(90% 46% at 50% 102%, rgba(252, 252, 252, 0.07) 0%, transparent 68%),
+    radial-gradient(60% 32% at 62% 8%, rgba(255, 255, 255, 0.09) 0%, transparent 62%),
+    radial-gradient(90% 46% at 50% 102%, rgba(255, 255, 255, 0.07) 0%, transparent 68%),
     linear-gradient(180deg, #040506 0%, var(--night) 44%, var(--night-2) 78%, #040506 100%);
 }
 
@@ -40,13 +40,13 @@
   inset: 0 0 45% 0;
   opacity: 0.5;
   background-image:
-    radial-gradient(1px 1px at 12% 18%, rgba(252, 252, 252, 0.8) 50%, transparent 51%),
-    radial-gradient(1px 1px at 28% 9%, rgba(252, 252, 252, 0.6) 50%, transparent 51%),
-    radial-gradient(1px 1px at 41% 24%, rgba(252, 252, 252, 0.5) 50%, transparent 51%),
-    radial-gradient(1px 1px at 57% 12%, rgba(252, 252, 252, 0.7) 50%, transparent 51%),
-    radial-gradient(1px 1px at 71% 27%, rgba(252, 252, 252, 0.45) 50%, transparent 51%),
-    radial-gradient(1px 1px at 83% 15%, rgba(252, 252, 252, 0.65) 50%, transparent 51%),
-    radial-gradient(1px 1px at 92% 30%, rgba(252, 252, 252, 0.4) 50%, transparent 51%);
+    radial-gradient(1px 1px at 12% 18%, rgba(255, 255, 255, 0.8) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 9%, rgba(255, 255, 255, 0.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 41% 24%, rgba(255, 255, 255, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 57% 12%, rgba(255, 255, 255, 0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 71% 27%, rgba(255, 255, 255, 0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 15%, rgba(255, 255, 255, 0.65) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 30%, rgba(255, 255, 255, 0.4) 50%, transparent 51%);
 }
 
 /* Foliage layers. Each is a wide SVG band pinned to an edge; the depth trick is
@@ -109,7 +109,7 @@
   z-index: 2;
   background:
     linear-gradient(180deg, transparent 0%, transparent 62%, rgba(180, 200, 195, 0.05) 82%, transparent 100%),
-    radial-gradient(70% 22% at 30% 96%, rgba(252, 252, 252, 0.06), transparent 70%);
+    radial-gradient(70% 22% at 30% 96%, rgba(255, 255, 255, 0.06), transparent 70%);
   animation: fog-drift 46s linear infinite;
 }
 
@@ -141,8 +141,8 @@
   background: linear-gradient(
     104deg,
     transparent 0%,
-    rgba(252, 252, 252, 0.05) 46%,
-    rgba(252, 252, 252, 0.09) 50%,
+    rgba(255, 255, 255, 0.05) 46%,
+    rgba(255, 255, 255, 0.09) 50%,
     transparent 62%
   );
   opacity: calc(0.3 + var(--scroll-glow) * 0.7);
@@ -216,7 +216,7 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(22rem 22rem at var(--gx) var(--gy), rgba(252, 252, 252, 0.07) 0%, rgba(252, 252, 252, 0.03) 42%, transparent 70%);
+  background: radial-gradient(22rem 22rem at var(--gx) var(--gy), rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.03) 42%, transparent 70%);
   transition: opacity var(--dur) var(--ease-out);
 }
 
@@ -229,13 +229,13 @@
   right: 0;
   height: 3px;
   z-index: 30;
-  background: rgba(252, 252, 252, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   pointer-events: none;
 }
 
 .scroll-meter__fill {
   height: 100%;
-  background: linear-gradient(90deg, rgba(252, 252, 252, 0.35), var(--accent));
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.35), var(--accent));
   transform: scaleX(var(--scroll-progress));
   transform-origin: left;
 }
@@ -252,7 +252,7 @@
   background: rgba(6, 8, 9, 0.82);
   color: var(--bone);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(252, 252, 252, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.22);
   box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.5);
   transform: translateY(-50%);
 }
@@ -268,7 +268,7 @@
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.14em;
-  color: rgba(252, 252, 252, 0.5);
+  color: rgba(255, 255, 255, 0.5);
   transition: color var(--dur-fast) var(--ease-out);
 }
 
@@ -280,20 +280,20 @@
   transition: width var(--dur) var(--ease-snap), background var(--dur-fast);
 }
 
-.rail a:hover { color: var(--white); }
+.rail a:hover { color: var(--accent); }
 
 .rail a:focus-visible {
-  color: var(--white);
+  color: var(--accent);
   outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
-.rail a.is-active { color: var(--white); }
+.rail a.is-active { color: var(--accent); }
 
 .rail a.is-active span:last-child {
   width: 2.6rem;
   background: var(--accent);
-  box-shadow: 0 0 0.7rem rgba(252, 252, 252, 0.55);
+  box-shadow: 0 0 0.7rem rgba(255, 255, 255, 0.55);
 }
 
 /* Hero */
@@ -323,9 +323,9 @@
   display: grid;
   place-items: center;
   background:
-    radial-gradient(60% 60% at 50% 42%, rgba(252, 252, 252, 0.07) 0%, transparent 70%),
-    linear-gradient(152deg, rgba(252, 252, 252, 0.06) 0%, transparent 40%);
-  border: 1px solid rgba(252, 252, 252, 0.14);
+    radial-gradient(60% 60% at 50% 42%, rgba(255, 255, 255, 0.07) 0%, transparent 70%),
+    linear-gradient(152deg, rgba(255, 255, 255, 0.06) 0%, transparent 40%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   clip-path: polygon(13% 4%, 47% 0%, 79% 7%, 97% 31%, 89% 63%, 94% 86%, 62% 100%, 27% 95%, 6% 82%, 0% 44%, 4% 20%);
   transform: perspective(1200px)
     translate3d(calc(var(--px) * 2.4rem), calc(-50% + var(--py) * 2rem), 0)
@@ -338,7 +338,7 @@
   content: '';
   position: absolute;
   inset: -40%;
-  background: linear-gradient(76deg, transparent 42%, rgba(252, 252, 252, 0.13) 50%, transparent 58%);
+  background: linear-gradient(76deg, transparent 42%, rgba(255, 255, 255, 0.13) 50%, transparent 58%);
   transform: translate3d(calc(var(--scroll-progress) * -60%), 0, 0);
 }
 
@@ -351,7 +351,7 @@
   max-height: 62%;
   margin: auto;
   object-fit: contain;
-  filter: drop-shadow(0 0 3rem rgba(252, 252, 252, 0.22));
+  filter: drop-shadow(0 0 3rem rgba(255, 255, 255, 0.22));
   animation: logo-carve 1.5s var(--ease-out) both;
 }
 
@@ -373,7 +373,7 @@
   height: 0.5rem;
   background: var(--accent);
   border-radius: 50%;
-  box-shadow: 0 0 0.8rem rgba(252, 252, 252, 0.6);
+  box-shadow: 0 0 0.8rem rgba(255, 255, 255, 0.6);
   animation: pulse 2.4s var(--ease-out) infinite;
 }
 
@@ -386,7 +386,7 @@
   font-size: var(--step-hero);
   letter-spacing: -0.03em;
   margin: 0;
-  color: var(--white);
+  color: var(--accent);
   text-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.75);
 }
 
@@ -400,7 +400,7 @@
   display: inline-block;
   transform: translate3d(0, 105%, 0);
   animation: char-rise 0.95s var(--ease-out) both;
-  animation-delay: calc(var(--i) * 0.045s + 0.15s);
+  animation-delay: calc(var(--i, 0) * 0.045s + 0.15s);
 }
 
 @keyframes char-rise {
@@ -410,7 +410,7 @@
 
 .hero__title .word--outline {
   color: transparent;
-  -webkit-text-stroke: 2px rgba(252, 252, 252, 0.72);
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.72);
   text-align: right;
 }
 
@@ -421,7 +421,7 @@
   padding: 0.5rem 0.9rem;
   border: 2px solid var(--accent);
   background: rgba(6, 8, 9, 0.6);
-  color: var(--white);
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: clamp(0.8rem, 1.4vw, 1.05rem);
   font-weight: 700;
@@ -542,8 +542,8 @@
   display: grid;
   gap: 0.4rem;
   padding-block: clamp(1.4rem, 4vw, 2.6rem);
-  background: linear-gradient(180deg, rgba(252, 252, 252, 0.04), transparent 70%), #030405;
-  color: var(--white);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 70%), #030405;
+  color: var(--accent);
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - clamp(2rem, 7vw, 5.5rem)), 0 100%);
   /* The diagonal clip needs some bottom room or the second row gets sheared,
@@ -566,11 +566,11 @@
   padding-right: 0.6em;
 }
 
-.seam__row--a { animation: marquee 34s linear infinite; color: var(--white); }
+.seam__row--a { animation: marquee 34s linear infinite; color: var(--accent); }
 .seam__row--b {
   animation: marquee 34s linear infinite reverse;
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(252, 252, 252, 0.55);
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.55);
 }
 
 @keyframes marquee {

@@ -7,8 +7,8 @@ html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   min-width: 320px;
-  background: var(--wall);
-  color: var(--on-wall);
+  background: var(--night);
+  color: var(--bone);
   font-family: var(--font-body);
   font-size: var(--step-body);
   line-height: 1.65;
@@ -118,7 +118,7 @@ img, svg { display: block; max-width: 100%; }
 
 .cta:hover,
 .cta:focus-visible {
-  color: var(--white);
+  color: var(--accent);
   border-color: var(--accent);
 }
 
@@ -136,8 +136,8 @@ img, svg { display: block; max-width: 100%; }
 
 .cta--ghost {
   background: transparent;
-  color: var(--white);
-  border-color: rgba(252, 252, 252, 0.45);
+  color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.45);
 }
 
 .cta--ghost::before { background: var(--accent); }
@@ -148,7 +148,7 @@ img, svg { display: block; max-width: 100%; }
 .cta--onDark { border-color: var(--bone); color: var(--bone); background: transparent; }
 .cta--onDark::before { background: var(--bone); }
 .cta--onDark:hover,
-.cta--onDark:focus-visible { color: var(--ink); border-color: var(--bone); }
+.cta--onDark:focus-visible { color: var(--on-accent); border-color: var(--bone); }
 
 .icon { width: 1.15em; height: 1.15em; flex: none; }
 

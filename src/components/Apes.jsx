@@ -39,23 +39,28 @@ export const POSES = {
     trunkWidth: 30,
   },
   hunch: {
-    // Deep forward lean, arms hanging long past the shins.
+    // Deep forward lean, arms hanging long past the shins. The far elbow sits
+    // left of the trunk's lower-right edge: 2u further right and the trunk, the
+    // far arm and the near thigh enclosed a 2x4u gap that read as a dark speck
+    // inside a solid cut-out.
     spine: [[40, 88], [52, 68], [72, 54]],
     head: { x: 78, y: 50, s: 44, rot: 40 },
-    legNear: { hip: [46, 90], knee: [62, 106], ankle: [66, 118], toe: [78, 121] },
-    legFar: { hip: [38, 90], knee: [30, 106], ankle: [26, 118], toe: [14, 121] },
+    legNear: { hip: [46, 90], knee: [62, 106], ankle: [66, 116], toe: [78, 121] },
+    legFar: { hip: [38, 90], knee: [30, 106], ankle: [26, 116], toe: [14, 121] },
     armNear: { sh: [74, 56], elbow: [84, 78], wrist: [80, 98] },
-    armFar: { sh: [66, 60], elbow: [66, 84], wrist: [60, 102] },
+    armFar: { sh: [66, 60], elbow: [62, 84], wrist: [60, 102] },
     trunkWidth: 30,
   },
   forage: {
     // Low scavenger at the tail of the line, digging with a stick. Only used
-    // small, where its silhouette is still legible.
+    // small, where its silhouette is still legible. Ankles are at the same
+    // height as every other pose so the procession stands on one line: the
+    // shin's round cap, not the toe, sets the figure's baseline.
     spine: [[36, 92], [50, 82], [68, 78]],
     head: { x: 74, y: 78, s: 40, rot: 58 },
     stick: [[92, 100], [118, 94]],
-    legNear: { hip: [42, 94], knee: [56, 108], ankle: [60, 118], toe: [72, 122] },
-    legFar: { hip: [34, 94], knee: [28, 108], ankle: [24, 118], toe: [12, 122] },
+    legNear: { hip: [42, 94], knee: [56, 108], ankle: [60, 116], toe: [72, 121] },
+    legFar: { hip: [34, 94], knee: [28, 108], ankle: [24, 116], toe: [12, 121] },
     armNear: { sh: [70, 80], elbow: [82, 92], wrist: [92, 100] },
     armFar: { sh: [62, 80], elbow: [62, 96], wrist: [58, 112] },
     trunkWidth: 24,
