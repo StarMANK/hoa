@@ -200,8 +200,14 @@
   transition: width var(--dur) var(--ease-snap), background var(--dur-fast);
 }
 
-.rail a:hover,
-.rail a:focus-visible { color: var(--ink); outline: none; }
+.rail a:hover { color: var(--ink); }
+
+/* Rail links sit on the light plate, so the ember ring would vanish there. */
+.rail a:focus-visible {
+  color: var(--ink);
+  outline: 3px solid var(--ink);
+  outline-offset: 2px;
+}
 
 .rail a.is-active { color: var(--ember-hot); }
 
@@ -218,8 +224,8 @@
   min-height: 100svh;
   display: grid;
   align-content: center;
-  gap: clamp(1rem, 1.8vw, 1.4rem);
-  padding-block: clamp(4rem, 10vh, 7rem) clamp(3rem, 7vh, 5rem);
+  gap: clamp(0.9rem, 1.6vw, 1.3rem);
+  padding-block: clamp(3rem, 6vh, 5rem) clamp(2.5rem, 6vh, 4rem);
   perspective: 1200px;
 }
 
@@ -335,13 +341,13 @@
 
 .hero__foot {
   display: grid;
-  gap: 1.4rem;
+  gap: 1rem;
   max-width: 44ch;
 }
 
 .hero__stack {
   display: grid;
-  gap: clamp(1rem, 2.2vw, 1.6rem);
+  gap: clamp(0.8rem, 1.6vw, 1.1rem);
   justify-items: start;
 }
 
@@ -365,6 +371,11 @@
   font-size: 0.7rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
+  /* Out of the grid flow: under the plate it counterweights the type block
+     instead of stacking under the copy and pushing the hero off the fold. */
+  position: absolute;
+  right: clamp(2rem, 7vw, 6rem);
+  bottom: clamp(2rem, 5vh, 3.5rem);
 }
 
 .scroll-hint .icon { animation: nudge 1.9s var(--ease-snap) infinite; }
@@ -420,7 +431,7 @@
     position: relative;
     top: auto;
     right: auto;
-    width: min(78vw, 26rem);
+    width: min(58vw, 20rem);
     transform: none;
     margin-inline: auto;
     order: -1;
@@ -428,9 +439,13 @@
 
   .hero {
     text-align: left;
-    padding-bottom: 7.5rem;
+    padding-bottom: 5rem;
   }
   .hero__title .word--outline { text-align: left; }
+
+  /* Touch users scroll by reflex, and the fixed chapter rail already anchors
+     the bottom edge, so the hint is dead weight inside a short viewport. */
+  .scroll-hint { display: none; }
 
   .rail {
     top: auto;

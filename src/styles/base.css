@@ -117,7 +117,13 @@ img, svg { display: block; max-width: 100%; }
 .cta:focus-visible {
   color: var(--white);
   border-color: var(--ember);
-  outline: none;
+}
+
+/* The sweep alone is not enough contrast on every background, so keyboard
+   focus keeps its own ring. */
+.cta:focus-visible {
+  outline: 3px solid var(--ember);
+  outline-offset: 3px;
 }
 
 .cta:hover::before,

@@ -88,6 +88,21 @@ describe('Hall Of Apes origin wall', () => {
     expect(document.querySelectorAll('.chapter:not(.is-in)').length).toBe(0);
   });
 
+  it('draws carved marks without non-scaling-stroke', () => {
+    render(<App />);
+
+    // pathLength="1" drives the carve reveal via stroke-dasharray. Chromium
+    // applies that dash in device space when vector-effect is
+    // non-scaling-stroke, so every scaled mark stopped mid-path.
+    const paths = document.querySelectorAll('svg .carve');
+    expect(paths.length).toBeGreaterThan(0);
+    paths.forEach((path) => {
+      expect(path.getAttribute('vector-effect')).toBeNull();
+      // SVG attribute names are case sensitive: it is pathLength, not lowercase.
+      expect(path.getAttribute('pathLength')).toBe('1');
+    });
+  });
+
   it('keeps pointer parallax vars inside the range CSS multiplies by rem', async () => {
     render(<App />);
     const world = document.querySelector('.world');

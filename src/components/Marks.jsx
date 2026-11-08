@@ -1,12 +1,14 @@
 // Hand drawn looking primitives. Every stroke uses pathLength="1" so CSS can
-// animate a uniform "carve" reveal regardless of real path length.
+// animate a uniform "carve" reveal regardless of real path length. Stroke
+// width deliberately scales with the mark: Chromium applies dash patterns in
+// device space once vector-effect: non-scaling-stroke is set, which truncates
+// the pathLength-based reveal partway through the shape.
 const stroke = {
   fill: 'none',
   stroke: 'currentColor',
   strokeWidth: 2.4,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
-  vectorEffect: 'non-scaling-stroke',
 };
 
 function Carve({ d, ...rest }) {
@@ -58,23 +60,30 @@ function Trail() {
   );
 }
 
-// One cartoon bone as a single closed outline: shaft walls plus four condyle
-// arcs. Kept as one path so the carve reveal draws one continuous object.
-function Bone({ transform }) {
+// One cartoon bone: a narrow shaft capped by four circular condyles that
+// bulge well past it and pinch together at the middle. Circular arcs keep the
+// lobes round at every size, so one closed path reads as a bone.
+function Bone({ transform, weightScale = 1 }) {
   return (
     <Carve
       transform={transform}
-      d="M50 62a12 12 0 1 0-9 20 12 12 0 1 0 9 20h60a12 12 0 1 0 9-20 12 12 0 1 0-9-20Z"
+      style={{ strokeWidth: 3.2 / weightScale }}
+      d="M52 38a17 17 0 0 1 16.7 20h44a17 17 0 0 1 16.7-20 17 17 0 0 1 5.7 33 17 17 0 1 1-22.4 13h-47a17 17 0 1 1-22.4-13 17 17 0 0 1 5.7-33Z"
     />
   );
 }
 
 function Bones() {
+  // CSS paints marks at stroke-width 3.2, but these paths sit inside a scale()
+  // transform, so the weight is divided back out to keep both bones carving
+  // with the same thickness instead of the small one reading hairline.
   return (
     <svg className="mark" viewBox="0 0 160 140" aria-hidden="true">
-      <Bone transform="translate(0 4)" />
-      <Bone transform="translate(118 26) rotate(-34) scale(0.42) translate(-80 -79)" />
-      <Carve d="M28 120h20M116 124h18M46 130h10" />
+      <Bone transform="translate(58 88) scale(0.85) translate(-80 -64.5)" weightScale={0.85} />
+      <Bone
+        transform="translate(127 40) rotate(-32) scale(0.44) translate(-80 -64.5)"
+        weightScale={0.44}
+      />
     </svg>
   );
 }
