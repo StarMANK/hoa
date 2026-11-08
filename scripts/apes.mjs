@@ -159,3 +159,47 @@ const result = await page.evaluate(async () => {
 
 console.log(JSON.stringify(result, null, 2));
 await browser.close();
+
+// Thresholds are read off the current geometry rather than invented, so each one
+// sits clearly below where the shapes actually are: baselines all measure 122.83,
+// the closest two poses differ by 38.7% of their union, and the emptiest pose
+// (forage, crouched low) still fills 18.5% of its box.
+const failures = [];
+const BASELINE_TOLERANCE = 0.5;
+const MIN_DISTINCT = 10;
+const MIN_FILL = 0.05;
+
+if (result.count !== 5) failures.push(`expected 5 procession walkers, found ${result.count}`);
+
+const poses = Object.entries(result.perPose);
+if (poses.length < 4) failures.push(`only ${poses.length} distinct poses rendered, 4 are authored`);
+
+const baselines = poses.map(([, p]) => p.baseline);
+const spread = Math.max(...baselines) - Math.min(...baselines);
+if (spread > BASELINE_TOLERANCE) {
+  failures.push(`poses do not share a ground line: baselines ${baselines.join(', ')} (spread ${spread.toFixed(2)})`);
+}
+
+for (const [name, p] of poses) {
+  if (p.clippedAtEdge) failures.push(`pose "${name}" is clipped by the viewBox edge, a limb is cut off`);
+  if (p.holesPx.px > 0) {
+    failures.push(`pose "${name}" has ${p.holesPx.px}px sealed inside its outline at ${JSON.stringify(p.holesPx.box)}`);
+  }
+  if (p.fillRatio < MIN_FILL) failures.push(`pose "${name}" fills only ${(p.fillRatio * 100).toFixed(1)}% of its box`);
+}
+
+for (const d of result.distinct) {
+  if (d.differentOfUnion < MIN_DISTINCT) {
+    failures.push(`${d.pair} differ by only ${d.differentOfUnion}% of their union, they read as one pose`);
+  }
+}
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
+console.log(
+  `\n${poses.length} poses: whole, sealed, on one ground line at ${baselines[0]}, ` +
+    `closest pair differs ${Math.min(...result.distinct.map((d) => d.differentOfUnion))}% of union`,
+);
