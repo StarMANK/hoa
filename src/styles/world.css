@@ -474,7 +474,18 @@
      instead of stacking under the copy and pushing the hero off the fold. */
   position: absolute;
   right: clamp(2rem, 7vw, 6rem);
-  bottom: clamp(2rem, 5vh, 3.5rem);
+  /* Above the heads of the procession, not across them. Restoring the tail apes to
+     their authored alpha put a white silhouette under white glyphs: sampling the
+     ground behind the cue across a full 9s walk cycle, the brightest ape ink under
+     the words reached L 0.5888 and covered 19% of the label, giving the stroke
+     1.38:1, which fails WCAG AA, against 16.91:1 with the line hidden. Lifting the
+     cue clears every walker at every phase of the cycle: 0% ape ink and 6.64:1 at
+     900px, 7.33:1 at 800px, 7.31:1 at 740px, where it also stays on the fold. Two
+     alternatives were measured and lost: a shadow following the letterforms only
+     reached 1.78:1, because a thin stroke has no room to cast under itself, and a
+     fog patch cleared AA at 4.95:1 but painted a visible ellipse across the ape's
+     head. Moving it into the copy column pushed the hero 84px past the fold. */
+  bottom: calc(clamp(2rem, 5vh, 3.5rem) + 4.5rem);
 }
 
 .scroll-hint .icon { animation: nudge 1.9s var(--ease-snap) infinite; }
