@@ -134,3 +134,5 @@ for (const vp of [
 
 await browser.close();
 console.log(`\n${failures === 0 ? 'every scroll-driven transform moves while visible' : `${failures} targets do not`}`);
+
+if (failures > 0) process.exit(1);

@@ -18,6 +18,8 @@ const browser = await chromium.launch({
 
 const WALKERS = '.roam__walker, .procession__walker';
 
+const failures = [];
+
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -33,6 +35,10 @@ for (const vp of [
   console.log('   scrollY   progress  seen  roam  proc  effective opacities        culled by');
 
   const seenAt = [];
+  // "On screen" is not the same as "able to be seen": an ape at 0.02 effective
+  // opacity is in the DOM, in the screenshots, and invisible to a person.
+  let faintest = 1;
+  let faintestAt = 0;
   for (const y of [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.75, 0.9, 1]) {
     const px = Math.round(total * y);
     await page.evaluate((t) => window.scrollTo({ top: t, behavior: 'instant' }), px);
@@ -40,6 +46,12 @@ for (const vp of [
     const s = await page.evaluate(effectiveOpacityProbe, WALKERS);
     const v = s.visible;
     seenAt.push(v.length);
+    for (const r of v) {
+      if (r.eff < faintest) {
+        faintest = r.eff;
+        faintestAt = px;
+      }
+    }
     console.log(
       `  ${String(px).padStart(6)}   ${(s.progress || '-').padEnd(7)}  ` +
         `${String(v.length).padStart(4)}  ` +
@@ -51,8 +63,25 @@ for (const vp of [
   }
   const empty = seenAt.filter((n) => n === 0).length;
   console.log(`  depths with no apes on screen: ${empty}/${seenAt.length}  ${JSON.stringify(seenAt)}`);
+  // The whole premise of the rework is that the ape is the persistent subject. A
+  // single empty depth means some scroll position shows a page of scenery only.
+  if (empty > 0) failures.push(`${vp.name}: ${empty} of ${seenAt.length} scroll depths render no apes`);
+  // Anything under 0.05 on a #030405 void is within a few code values of the
+  // background, i.e. painted but not visible. 0.05 keeps a margin under the
+  // dimmest ape the design actually asks for (0.21 on mobile mid-scroll).
+  if (faintest < 0.05) {
+    failures.push(`${vp.name}: faintest ape on screen is ${faintest.toFixed(3)} at scrollY ${faintestAt}, effectively invisible`);
+  } else {
+    console.log(`  faintest ape anywhere on the scroll: ${faintest.toFixed(2)} at scrollY ${faintestAt}`);
+  }
 
   await page.context().close();
 }
 
 await browser.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}

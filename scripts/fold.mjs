@@ -29,6 +29,8 @@ const tally = (s) => {
   };
 };
 
+const failures = [];
+
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -48,7 +50,26 @@ for (const vp of [
   console.log(`  at y=0     progress=${atTop.progress}  ${JSON.stringify(tally(atTop))}`);
   console.log(`  after 1.2vh progress=${scrolled.progress}  ${JSON.stringify(tally(scrolled))}`);
 
+  // The hero is carried by the procession: the roam layer is deliberately gated
+  // behind --scroll-progress, so at y=0 the line of apes is the only subject and
+  // it has to be there on both viewports. Opacity is checked too, because an ape
+  // in the DOM at 0.02 alpha is counted as "seen" but cannot be looked at.
+  const topTally = tally(atTop);
+  if (topTally.proc < 5) failures.push(`${vp.name}: only ${topTally.proc} procession apes on the fold at y=0`);
+  const tooFaint = topTally.eff.filter((e) => e < 0.1).length;
+  if (tooFaint > 0) failures.push(`${vp.name}: ${tooFaint} fold apes paint below 0.1 effective opacity`);
+  // And leaving the hero must hand over to the roaming kawanan, not to scenery.
+  const scrollTally = tally(scrolled);
+  if (scrollTally.roam === 0) failures.push(`${vp.name}: no roam apes appear after leaving the hero`);
+
   await page.context().close();
 }
 
 await browser.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
+console.log('\nthe fold carries the procession and the handover to the roam layer works');

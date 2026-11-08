@@ -11,6 +11,8 @@ const EXE =
 
 const browser = await chromium.launch({ executablePath: EXE, args: ['--no-sandbox', '--disable-dev-shm-usage'] });
 
+const failures = [];
+
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -74,7 +76,25 @@ for (const vp of [
         `(${Math.round((h.area / h.textArea) * 100)}% of the text box)  ${h.above}`,
     ),
   );
+  // An ape painted over glyphs always wins, so that is a defect outright. Text on
+  // top can still be unreadable when the ape is bright: the SCROLL cue cleared
+  // 16.91:1 with nothing behind it and fell to 1.38:1 once a 0.77-alpha silhouette
+  // moved in, while only 19% of its box was covered. So any coverage at all is
+  // reported as a failure rather than waved through below some invented tolerance.
+  for (const h of hits) {
+    const pct = Math.round((h.area / h.textArea) * 100);
+    failures.push(
+      `${vp.name}: "${h.label}" sits on ape #${h.walker} (${pct}% of its box, ${h.above})`,
+    );
+  }
 
   await page.context().close();
 }
 await browser.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
+console.log('\nno procession ape touches any hero text');

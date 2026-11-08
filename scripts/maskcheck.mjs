@@ -111,6 +111,8 @@ const perColumn = () => {
   };
 };
 
+const failures = [];
+
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -125,7 +127,51 @@ for (const vp of [
   const pred = await page.evaluate(perColumn);
   if (pred.error) {
     console.log(`[${vp.name}] ${pred.error}`);
+    failures.push(`${vp.name}: could not predict the mask (${pred.error}), so nothing was verified`);
     continue;
+  }
+
+  // Anything painted in front of the procession breaks the unmixing below. The
+  // formula alpha = (on - off) / (255 - off) assumes the only thing that changes
+  // between the two shots is the ape; a translucent button over an ape is constant
+  // in both shots yet sits in front of the pixel being read, so the ground `off`
+  // is button-over-background rather than background and the recovered alpha comes
+  // out too high. Measured: on mobile, walker #0 read 0.500 against an authored
+  // 0.420 purely because .hero__actions overlaps it. Hiding the CTA moved the error
+  // from 0.080 to 0.007. So foreground overlap is removed for both shots, and the
+  // removal is reported rather than left as a silent change to the scene.
+  const occluders = await page.evaluate(() => {
+    const progEl = document.querySelector('.procession');
+    const prog = progEl.getBoundingClientRect();
+    const out = [];
+    for (const el of document.querySelectorAll('body *')) {
+      // An ancestor of the procession cannot occlude it: hiding `.hero` hides the
+      // apes with it. Only elements outside the procession's own subtree are
+      // candidates, which also rules out the walkers' own svg parts.
+      if (progEl.contains(el) || el.contains(progEl)) continue;
+      const cls = (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean);
+      if (!cls.length) continue;
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 || r.height === 0) continue;
+      const cs = getComputedStyle(el);
+      if (cs.visibility === 'hidden' || cs.display === 'none' || Number(cs.opacity) === 0) continue;
+      const z = Number(cs.zIndex);
+      if (!(Number.isFinite(z) && z > 0)) continue; // behind the procession, cannot occlude
+      const ox = Math.min(prog.right, r.right) - Math.max(prog.left, r.left);
+      const oy = Math.min(prog.bottom, r.bottom) - Math.max(prog.top, r.top);
+      if (ox <= 0 || oy <= 0) continue;
+      out.push(cls[0]);
+    }
+    // A parent and its child can both qualify; hiding the outermost is enough and
+    // hides less of the scene overall.
+    const set = new Set(out);
+    return [...set].filter((c) => ![...set].some((other) => other !== c && document.querySelector(`.${other} .${c}`)));
+  });
+
+  const hideCss = occluders.map((c) => `.${c} { visibility: hidden !important; }`).join('\n');
+  if (occluders.length) {
+    await page.addStyleTag({ content: hideCss });
+    await page.waitForTimeout(150);
   }
 
   await page.evaluate(() => document.querySelector('.procession').classList.add('off'));
@@ -137,6 +183,7 @@ for (const vp of [
   const on = await decode(page, await page.screenshot());
 
   console.log(`\n[${vp.name}] mask prediction vs pixels`);
+  if (occluders.length) console.log(`  hidden while measuring (painted above the line): ${occluders.join(', ')}`);
   // One matched pair per walker rather than one number per column: take the
   // brightest pixel the ape contributes anywhere in its box and read the
   // prediction back at that same x. Comparing every column instead under-reads
@@ -162,11 +209,13 @@ for (const vp of [
     }
     if (atX === null) {
       console.log(`  #${i}  own ${w.own.toFixed(2)}  no ink found`);
+      failures.push(`${vp.name}: walker #${i} painted no ink at all`);
       return;
     }
     const want = w.cols.find((cl) => cl.x === atX)?.want ?? NaN;
     const err = Math.abs(got - want);
     if (err > worst) worst = err;
+    if (err >= 0.05) failures.push(`${vp.name}: walker #${i} predicted ${want.toFixed(3)} but painted ${got.toFixed(3)}`);
     const pct = (((atX - 0) / 1380) * 100).toFixed(1);
     console.log(
       `  #${i}  own ${w.own.toFixed(2)}  brightest ink at x=${atX} (~${pct}% across)  ` +
@@ -179,3 +228,10 @@ for (const vp of [
 }
 
 await browser.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
+console.log('\npainted alpha matches the mask everywhere it was measured');

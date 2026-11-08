@@ -16,6 +16,8 @@ const browser = await chromium.launch({
 
 const CYCLE_MS = 9600;
 
+const failures = [];
+
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -84,6 +86,9 @@ for (const vp of [
     // A sprite is ~100px wide, so anything under ~2px/s is indistinguishable from
     // a still over the second it takes to glance at it.
     const verdict = s.peakPxPerSec < 2 ? 'FROZEN' : s.peakPxPerSec < 5 ? 'sluggish' : 'alive';
+    if (verdict !== 'alive') {
+      failures.push(`${vp.name}: walker #${i} is ${verdict} at ${s.peakPxPerSec}px/s peak`);
+    }
     console.log(
       `  #${i}  ${String(s.width).padStart(3)}px wide  eff ${s.eff.toFixed(2)}  ` +
         `peak ${String(s.peakPxPerSec).padStart(5)}px/s  sweeps ${String(s.rangePx).padStart(3)}px  ` +
@@ -95,3 +100,10 @@ for (const vp of [
 }
 
 await browser.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
+console.log('\nevery walker in the procession is visibly moving');

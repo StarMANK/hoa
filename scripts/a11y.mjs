@@ -91,9 +91,24 @@ const normalMoving = await ambientMotion(normalPage, 1800);
 console.log(`no-preference ambient elements moving (must be > 0): ${normalMoving}`);
 await normal.close();
 
-if (rmMoving > 0) console.log('  !! motion still running under reduced-motion');
-if (rmReport.revealOpacityBelow > 0) console.log(`  !! ${rmReport.revealOpacityBelow} reveals still faded out`);
-if (rmReport.unreadable.length) console.log('  !! unreadable under reduced motion:', rmReport.unreadable.slice(0, 5));
+const failures = [];
+if (rmMoving > 0) {
+  console.log('  !! motion still running under reduced-motion');
+  failures.push(`${rmMoving} ambient elements still animating under prefers-reduced-motion`);
+}
+if (rmReport.revealOpacityBelow > 0) {
+  console.log(`  !! ${rmReport.revealOpacityBelow} reveals still faded out`);
+  failures.push(`${rmReport.revealOpacityBelow} reveals still faded out with JS/observer disabled`);
+}
+if (rmReport.unreadable.length) {
+  console.log('  !! unreadable under reduced motion:', rmReport.unreadable.slice(0, 5));
+  failures.push(`${rmReport.unreadable.length} elements unreadable under reduced motion`);
+}
+// Reduced motion must not cost anyone the subject: the apes are content here.
+if (rmReport.apesVisible === 0) failures.push('reduced motion hides every ape on the page');
+// The inverse half: if nothing moves for a normal visitor either, the motion work
+// is not shipping and only this line would notice.
+if (normalMoving === 0) failures.push('no ambient motion at all under prefers-reduced-motion: no-preference');
 
 // --- keyboard -------------------------------------------------------------
 const kb = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -131,6 +146,16 @@ console.log(`focus stops without a visible ring: ${noRing}`);
 await kbPage.evaluate(() => document.querySelector('.hero__actions a')?.focus());
 const focusedHref = await kbPage.evaluate(() => document.activeElement?.getAttribute('href'));
 console.log('hero primary CTA href when focused:', focusedHref);
+if (focusedHref !== 'https://discord.gg/E7xcUNAGFD') {
+  failures.push(`hero primary CTA points at ${focusedHref}, not the Discord invite`);
+}
+if (noRing > 0) failures.push(`${noRing} keyboard focus stops have no visible focus ring`);
 
 await kb.close();
+
+if (failures.length) {
+  console.error('\nFAIL');
+  for (const f of failures) console.error(`  ${f}`);
+  process.exit(1);
+}
 await browser.close();
