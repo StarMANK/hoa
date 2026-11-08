@@ -1,6 +1,8 @@
-// The apes: the persistent subject of the page. Reference
-// dist/assets/ape-inspo.jpeg - a procession of hunched bipeds marching in
-// profile, largest to smallest, some carrying a spear.
+// The apes: the persistent subject of the page. The source reference was a photo
+// of hunched bipeds marching in profile, largest to smallest, some carrying a
+// spear. It was kept at dist/assets/ape-inspo.jpeg, which is gitignored, and a
+// build deleted it - the pose data below is what survived. Keep any future copy
+// under public/ so a build cannot eat it again.
 //
 // Each pose is joint data, not a traced path. Limbs are round-capped strokes,
 // thick for the thigh/upper arm and thin for the shin/forearm, so the silhouette

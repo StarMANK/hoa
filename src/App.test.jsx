@@ -124,4 +124,54 @@ describe('Hall Of Apes origin wall', () => {
       expect(Math.abs(value)).toBeLessThanOrEqual(1);
     });
   });
+
+  it('puts apes on the page as the subject, not as decoration that can vanish', () => {
+    render(<App />);
+
+    // The whole rework exists to make the kawanan the persistent subject, so
+    // the layers that carry it are load bearing and must not be removed.
+    expect(document.querySelectorAll('.roam__walker').length).toBeGreaterThanOrEqual(8);
+    expect(document.querySelectorAll('.procession__walker').length).toBe(5);
+    expect(document.querySelector('.roam')).not.toBeNull();
+
+    // Every silhouette is joint data, so a pose regression silently drops limbs.
+    // An ape is exactly 6 groups (near/far arm, near/far leg, trunk, skull) and
+    // exactly 10 paths: one round-capped stroke per limb segment (8), the trunk
+    // sweep, and the filled skull.
+    const apes = document.querySelectorAll('.ape');
+    expect(apes.length).toBeGreaterThan(0);
+    apes.forEach((svg) => {
+      expect(svg.querySelectorAll('g').length).toBe(6);
+      expect(svg.querySelectorAll('path').length).toBe(10);
+    });
+  });
+
+  it('keeps the procession announced and the roam layer silent', () => {
+    render(<App />);
+
+    // One ape is the picture worth announcing; the rest is atmosphere and would
+    // otherwise be 20 unlabeled images read out to a screen reader.
+    expect(screen.getByRole('img', { name: /Kawanan berjalan/i })).toBeInTheDocument();
+    expect(document.querySelectorAll('.roam__walker .ape[aria-hidden="true"]').length).toBeGreaterThan(0);
+    expect(document.querySelector('.roam').getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('gives every walker a rest position so reduced motion keeps the kawanan', () => {
+    render(<App />);
+
+    // Under prefers-reduced-motion the walk animation is switched off and each
+    // walker is parked at --rest instead of its final keyframe offscreen at
+    // 125vw, which used to make the subject disappear entirely.
+    const walkers = [...document.querySelectorAll('.roam__walker')];
+    expect(walkers.length).toBeGreaterThan(0);
+    walkers.forEach((node) => {
+      const rest = node.style.getPropertyValue('--rest');
+      expect(rest).toMatch(/^\d+(\.\d+)?vw$/);
+    });
+
+    // Staggered, otherwise a reduced-motion load stacks the whole kawanan at
+    // one x and looks like a single smeared blob.
+    const restValues = new Set(walkers.map((n) => n.style.getPropertyValue('--rest')));
+    expect(restValues.size).toBe(walkers.length);
+  });
 });
