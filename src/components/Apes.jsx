@@ -214,6 +214,10 @@ export function RoamLayer() {
                 '--delay-roam': `-${(spread + bandIndex * 7).toFixed(2)}s`,
                 '--fade': band.opacity,
                 '--bob': `${band.bob}px`,
+                // Where a walker stands when its cross-screen walk is switched
+                // off. Staggered so a reduced-motion load still shows a
+                // kawanan spread across the viewport instead of a pile-up.
+                '--rest': `${((bandIndex * 23 + i * 37) % 82) + 6}vw`,
               }}
             >
               <span className="roam__bob">

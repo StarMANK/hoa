@@ -162,7 +162,13 @@
   left: 0;
   width: var(--w, 60px);
   color: var(--accent);
-  opacity: var(--fade, 0.4);
+  /* The hero fold already carries its own procession as the subject, so the
+     roam layer fades in only as you leave it - otherwise a 168px silhouette
+     lands behind the CTA row. --scroll-progress lives on .world, an ancestor. */
+  opacity: calc(
+    var(--roam-fade, var(--fade, 0.4)) *
+      clamp(0, calc((var(--scroll-progress, 0) - 0.045) * 11), 1)
+  );
   animation: roam-cross var(--dur-roam, 120s) linear infinite;
   animation-delay: var(--delay-roam, 0s);
   will-change: transform;
@@ -489,9 +495,27 @@
   display: flex;
   align-items: flex-end;
   gap: clamp(0.5rem, 2.4vw, 2.6rem);
-  padding-left: clamp(1rem, 4vw, 3rem);
+  /* The line starts right of the copy column. Flush-left put the 200px lead
+     walker underneath the primary CTA, which is the one spot in the fold where
+     the subject and the call to action both need to be unmistakable. */
+  padding-left: clamp(1rem, 38vw, 34rem);
   pointer-events: none;
-  mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 96%);
+  /* Both ends dissolve: the head of the line emerges out of the dark beside the
+     copy, the tail walks off behind the logo plate. */
+  mask-image: linear-gradient(
+    90deg,
+    transparent 33%,
+    #000 41%,
+    #000 78%,
+    transparent 99%
+  );
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 33%,
+    #000 41%,
+    #000 78%,
+    transparent 99%
+  );
 }
 
 .procession__walker {
@@ -611,9 +635,28 @@
   /* On a phone the far band is 34px of grey mush, so it goes. The walkers that
      stay get re-seated lower - the tops authored for 1440 put them straight
      behind the copy column. !important because the tops arrive as inline vars. */
-  .roam__walker { opacity: calc(var(--fade, 0.4) * 0.75); }
+  .roam__walker { --roam-fade: calc(var(--fade, 0.4) * 0.75); }
   .roam__walker:nth-child(-n + 3) { display: none; }
   .roam__walker:nth-child(n + 4):nth-child(-n + 5) { top: 68% !important; }
   .roam__walker:nth-child(n + 6):nth-child(-n + 7) { top: 82% !important; }
   .roam__walker:nth-child(8) { top: 94% !important; }
+}
+
+/* The apes are the subject, so switching motion off must not delete them. Two
+   things conspire to do exactly that: the generic reset in base.css collapses
+   every animation to one frame, which parks each walker at its final keyframe
+   offscreen at 125vw, and the scroll hook returns early under reduce, so
+   --scroll-progress never leaves 0 and the below-the-fold gate keeps them at
+   opacity 0. They are instead stood still and spread across the viewport.
+   This block lives at the end of world.css so it wins the cascade against the
+   .roam__walker rule above. */
+@media (prefers-reduced-motion: reduce) {
+  .roam__walker {
+    animation: none !important;
+    transform: translate3d(var(--rest, 40vw), 0, 0);
+    opacity: calc(var(--roam-fade, var(--fade, 0.4)) * 1);
+  }
+  .roam__bob,
+  .procession__walker,
+  .procession__bob { animation: none !important; }
 }

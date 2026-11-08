@@ -18,8 +18,14 @@ async function ambientMotion(page, ms) {
   // Measure real displacement instead of trusting playState: an animation that
   // is parked in its delay phase still reports as "running".
   const read = () =>
-    Array.from(document.querySelectorAll('.ember, .seam__row--a, .wall-glyph, .hero__kicker .dot')).map(
-      (node) => {
+    // .ember and .wall-glyph are gone from the jungle-night world: the ambient
+    // movers are now the apes themselves, so they are what must be still under
+    // reduce and moving otherwise.
+    Array.from(
+      document.querySelectorAll(
+        '.roam__walker, .procession__walker, .seam__row--a, .hero__kicker .dot',
+      ),
+    ).map((node) => {
         const r = node.getBoundingClientRect();
         return [r.x, r.y, getComputedStyle(node).opacity];
       },
@@ -60,6 +66,14 @@ const rmReport = await rmPage.evaluate(() => {
     revealHidden: document.querySelectorAll('.reveal:not(.is-in)').length,
     revealOpacityBelow: Array.from(document.querySelectorAll('.reveal')).filter((n) => Number(getComputedStyle(n).opacity) < 0.9).length,
     unreadable,
+    // The apes are the subject: a reduced-motion load must still show them, not
+    // a page of empty foliage. Anything on screen with real opacity counts.
+    apesVisible: Array.from(document.querySelectorAll('.roam__walker, .procession__walker')).filter((n) => {
+      const s = getComputedStyle(n);
+      const r = n.getBoundingClientRect();
+      const onScreen = r.bottom > 0 && r.top < innerHeight && r.width > 0;
+      return onScreen && Number(s.opacity) > 0.05 && s.display !== 'none';
+    }).length,
     emberCount: document.querySelectorAll('.ember').length,
     scrollGlow: cs.getPropertyValue('--scroll-glow').trim(),
   };
