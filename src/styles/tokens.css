@@ -62,4 +62,8 @@
   --tilt-y: 0deg;
   --scroll-glow: 0;
   --scroll-progress: 0;
+  /* Written per element by useVisibleProgress onto the element that carries the
+     transform. Declared here so reduced motion and anything outside a tracked
+     element still resolve it instead of dropping the calc that uses it. */
+  --visible-progress: 0;
 }

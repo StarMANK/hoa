@@ -132,6 +132,84 @@ export function useScrollGlow(reduced = false) {
   return setNode;
 }
 
+// Whole-page progress is the wrong clock for anything inside a long section.
+// The trail is about a seventh of the page, so a bead driven by --scroll-progress
+// only ever covered a sliver of its travel while the trail was on screen and sat
+// parked off the end for the rest of the time it was visible. This exposes 0..1
+// for one element's own pass through the viewport, which is what its children are
+// actually asking about.
+//
+// Normalised to 0..1 across the tracked element's visible life: 0 at the scroll
+// position where it first appears, 1 where it finally leaves. That is the
+// definition that makes motion land where it can be seen, and the two obvious
+// alternatives both fail on real elements of this page:
+//  - whole-page progress left the trail's light bead sweeping a tenth of the line
+//    while the trail filled the screen, and a logo glint 7% of its own width.
+//  - progress over the element's own full pass (entering from below to gone above)
+//    is unreachable at both ends: the hero is already at the top on load, so it
+//    can never use the first half of that scale, and the join band is the last
+//    thing before the footer, so the page runs out of scroll while it is still on
+//    screen and it can never use the second.
+//
+// Track the element that carries the transform, not its section. The hero's glint
+// sits inside the hero but inset from it, so it leaves the viewport early and a
+// hero-based clock only reached 0.53 of its range while the glint was visible.
+export function useVisibleProgress(selector, { reduced = false } = {}) {
+  const [node, setNode] = useState(null);
+
+  useEffect(() => {
+    if (!node || reduced || typeof window === 'undefined') return undefined;
+    const targets = Array.from(node.querySelectorAll(selector));
+    if (!targets.length) return undefined;
+
+    let raf = 0;
+    // Only write when the value actually moved, so a parked page does not
+    // invalidate style on every frame.
+    const lastValues = new Map();
+
+    // How far an element with document-space top `top` has travelled through a
+    // viewport of height `vh`: 0 as its top edge reaches the bottom of the
+    // screen, 1 once its bottom edge has left through the top.
+    const raw = (top, height, vh) => {
+      const span = vh + height;
+      return span > 0 ? Math.min(1, Math.max(0, (vh - top) / span)) : 0;
+    };
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    const tick = () => {
+      const vh = window.innerHeight || 1;
+      const scrollY = window.scrollY;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+      for (const target of targets) {
+        const rect = target.getBoundingClientRect();
+        const docTop = rect.top + scrollY;
+        // Scrolling does not change layout, so the scroll positions where the
+        // element appears and disappears follow from where it is now.
+        const appearAt = clamp(docTop - vh, 0, maxScroll);
+        const leaveAt = clamp(docTop + rect.height, 0, maxScroll);
+        const first = raw(docTop - appearAt, rect.height, vh);
+        const last = raw(docTop - leaveAt, rect.height, vh);
+        const span = last - first;
+        // An element that cannot traverse at all gets 0 rather than a division by
+        // nothing: it is static, and a value here would only invent motion.
+        const progress =
+          span > 0.001 ? clamp((raw(rect.top, rect.height, vh) - first) / span, 0, 1) : 0;
+        const previous = lastValues.get(target);
+        if (previous === undefined || Math.abs(previous - progress) > 0.001) {
+          target.style.setProperty('--visible-progress', progress.toFixed(4));
+          lastValues.set(target, progress);
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [node, selector, reduced]);
+
+  return setNode;
+}
+
 // One observer powers the whole page: anything matching REVEAL_SELECTOR gets
 // `is-in` when it scrolls into frame, which drives .reveal fades, the SVG
 // carve-on strokes and the data bars. Keeps motion language consistent and

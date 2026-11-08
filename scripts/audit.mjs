@@ -4,6 +4,9 @@
 //     once you are mid-page, on desktop and phone? A subject you cannot see is
 //     still decoration.
 import { chromium } from 'playwright-core';
+import { effectiveOpacityProbe } from './lib/visibility.mjs';
+
+const WALKERS = '.roam__walker, .procession__walker';
 
 const EXE =
   process.env.CHROME_PATH ??
@@ -64,18 +67,17 @@ for (const vp of [
   await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.3));
   await page.waitForTimeout(900);
 
-  const at = async () =>
-    page.evaluate(() => {
-      const walk = [...document.querySelectorAll('.roam__walker')].map((n) => {
-        const s = getComputedStyle(n);
-        return Number(s.opacity);
-      });
-      return {
-        progress: getComputedStyle(document.querySelector('.world')).getPropertyValue('--scroll-progress').trim(),
-        roamOpacities: walk.map((v) => Number(v.toFixed(3))),
-        visibleCount: walk.filter((v) => v > 0.05).length,
-      };
-    });
+  const at = async () => {
+    const s = await page.evaluate(effectiveOpacityProbe, WALKERS);
+    return {
+      progress: s.progress,
+      // Own opacity alone counted display:none walkers and ignored the roam
+      // layer gating them, so it reported 8 apes where 5 were visible.
+      roamOpacities: s.rows.filter((r) => r.kind === 'roam__walker').map((r) => r.eff),
+      visibleCount: s.visible.length,
+      culled: s.culled,
+    };
+  };
 
   console.log(`[${vp.name}] fold:`, JSON.stringify(await overlap()));
   console.log(`[${vp.name}] trail@30%:`, JSON.stringify(await at()));

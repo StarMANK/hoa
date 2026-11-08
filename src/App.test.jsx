@@ -256,4 +256,46 @@ describe('palette integrity', () => {
     );
     expect(stale).toEqual([]);
   });
+
+  it('drives every --visible-progress transform from a tracked element', () => {
+    // --visible-progress is written onto the element a selector names in App.jsx.
+    // A CSS rule that reads it on any other element resolves to the :root 0 and
+    // the animation silently stops - exactly the trail-bead bug in a new costume,
+    // and invisible to every other test here. Read App.jsx as text because the
+    // selector list is a plain const, not a component boundary.
+    const app = readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'App.jsx'), 'utf8');
+    const declared = app.match(/const PROGRESS_TARGETS = '([^']*)'/)?.[1] ?? '';
+    const tracked = declared
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    expect(tracked.length).toBeGreaterThan(0);
+
+    const users = Object.entries(allStyles).flatMap(([file, text]) =>
+      (text.includes('--visible-progress') && file !== 'tokens.css' ? [file] : []),
+    );
+    expect(users.length).toBeGreaterThan(0);
+
+    // Every tracked selector has to exist in the markup, or the hook writes to
+    // nothing and the matching rule sits at 0 forever.
+    render(<App />);
+    const missing = tracked.filter((sel) => !document.querySelector(sel));
+    expect(missing).toEqual([]);
+
+    // And each file that reads the variable must be one of the tracked elements'
+    // own rules. Pseudo-elements inherit the variable from their originating
+    // element, so `::after` counts as that element reading it.
+    const owners = new Set(tracked.map((sel) => sel.replace(/::?[a-z-]+$/, '')));
+    const orphanRules = [];
+    for (const [file, text] of Object.entries(allStyles)) {
+      for (const m of text.matchAll(/([^{}]+)\{[^}]*var\(--visible-progress/g)) {
+        orphanRules.push({
+          file,
+          selector: m[1].trim().replace(/\s+/g, ' ').replace(/::?[a-z-]+$/, ''),
+        });
+      }
+    }
+    const orphans = orphanRules.filter((r) => r.selector && ![...owners].some((o) => r.selector.includes(o)));
+    expect(orphans.map((o) => `${o.file} ${o.selector}`)).toEqual([]);
+  });
 });

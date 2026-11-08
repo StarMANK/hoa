@@ -17,15 +17,6 @@ const browser = await chromium.launch({
 
 const WALKERS = '.roam__walker, .procession__walker';
 
-// effectiveOpacityProbe is evaluated in the page, so the selector has to be
-// interpolated rather than closed over.
-const probe = () => {
-  return {
-    progress: getComputedStyle(document.querySelector('.world')).getPropertyValue('--scroll-progress').trim(),
-    ...__PROBE__(__SELECTOR__),
-  };
-};
-
 const tally = (s) => {
   const seen = s.visible;
   return {
@@ -38,11 +29,6 @@ const tally = (s) => {
   };
 };
 
-const run = new Function(
-  'probe',
-  `return ${probe.toString().replace('__PROBE__', 'probe').replace('__SELECTOR__', 'SELECTOR')}`,
-);
-
 for (const vp of [
   { name: 'desktop', width: 1440, height: 900 },
   { name: 'mobile', width: 390, height: 844 },
@@ -53,10 +39,10 @@ for (const vp of [
   await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1600);
 
-  const atTop = await page.evaluate(run, effectiveOpacityProbe, WALKERS);
+  const atTop = await page.evaluate(effectiveOpacityProbe, WALKERS);
   await page.evaluate(() => window.scrollTo({ top: window.innerHeight * 1.2, behavior: 'instant' }));
   await page.waitForTimeout(900);
-  const scrolled = await page.evaluate(run, effectiveOpacityProbe, WALKERS);
+  const scrolled = await page.evaluate(effectiveOpacityProbe, WALKERS);
 
   console.log(`\n[${vp.name}]`);
   console.log(`  at y=0     progress=${atTop.progress}  ${JSON.stringify(tally(atTop))}`);

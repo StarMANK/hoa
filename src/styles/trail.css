@@ -45,9 +45,14 @@
   position: absolute;
   left: -1px;
   width: 4px;
-  height: 22vh;
-  background: linear-gradient(to bottom, transparent, var(--accent), transparent);
-  transform: translate3d(0, calc(var(--scroll-progress) * 320vh), 0);
+  /* Full-height strip, bead painted inside it, because translateY() percentages
+     resolve against the element's own box. Sized to the bead, a percentage would
+     move it 22vh at a time and no length of the thread could be named. Sized to
+     the thread, (100% - 22vh) is exactly its travel. */
+  top: 0;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, var(--accent) 50%, transparent) top / 100% 22vh no-repeat;
+  transform: translate3d(0, calc(var(--visible-progress, 0) * (100% - 22vh)), 0);
   filter: blur(0.5px);
 }
 
@@ -369,7 +374,10 @@
   position: absolute;
   inset: -30%;
   background: repeating-linear-gradient(122deg, transparent 0 3rem, rgba(255, 255, 255, 0.05) 3rem 3.06rem);
-  transform: translate3d(calc(var(--scroll-progress) * -14%), 0, 0);
+  /* Whole-page progress moved this 32px across the entire site, because the join
+     band owns the last sliver of scroll: 0.022 of the element's box. On the
+     band's own progress it is a full 14%. */
+  transform: translate3d(calc(var(--visible-progress, 0) * -14%), 0, 0);
 }
 
 .join__grid {

@@ -339,7 +339,10 @@
   position: absolute;
   inset: -40%;
   background: linear-gradient(76deg, transparent 42%, rgba(255, 255, 255, 0.13) 50%, transparent 58%);
-  transform: translate3d(calc(var(--scroll-progress) * -60%), 0, 0);
+  /* The hero owns only the first slice of the page's scroll, so whole-page
+     progress carried this across 7% of its own box before the hero had left the
+     screen. On the hero's own progress the sweep covers its full travel. */
+  transform: translate3d(calc(var(--visible-progress, 0) * -60%), 0, 0);
 }
 
 .hero__logo {

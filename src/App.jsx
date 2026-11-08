@@ -8,11 +8,24 @@ import {
   hero,
   join,
 } from './data/content.js';
-import { useActiveSection, usePointerVars, useReducedMotion, useRevealRoot, useScrollGlow } from './hooks/useMotion.js';
+import {
+  useActiveSection,
+  usePointerVars,
+  useReducedMotion,
+  useRevealRoot,
+  useScrollGlow,
+  useVisibleProgress,
+} from './hooks/useMotion.js';
 import { ForegroundFronds, ScrollMeter, Seam, WorldLayers } from './components/World.jsx';
 import { DataBand, Footer, Genres, Hero, Join, Rail, Rules, Trail } from './components/Sections.jsx';
 
 const navItems = [{ id: 'home', nav: 'HOME' }, ...chapters.map((c) => ({ id: c.id, nav: c.nav }))];
+
+// Transforms that need a clock of their own. Each gets --visible-progress on the
+// element carrying the transform, sweeping 0..1 across exactly the scroll range
+// where that element is on screen. Whole-page progress is useless to all three:
+// see useVisibleProgress.
+const PROGRESS_TARGETS = '.trail__thread, .join__bg, .hero__plate';
 
 export default function App() {
   const reduced = useReducedMotion();
@@ -21,6 +34,7 @@ export default function App() {
 
   const revealRef = useRevealRoot();
   const scrollRef = useScrollGlow(reduced);
+  const progressRef = useVisibleProgress(PROGRESS_TARGETS, { reduced });
   const { ref: pointerRef, bind } = usePointerVars({ reduced });
 
   useEffect(() => {
@@ -46,9 +60,10 @@ export default function App() {
     (node) => {
       revealRef(node);
       scrollRef(node);
+      progressRef(node);
       pointerRef(node);
     },
-    [revealRef, scrollRef, pointerRef],
+    [revealRef, scrollRef, progressRef, pointerRef],
   );
 
   function handleNavClick(event, id) {
