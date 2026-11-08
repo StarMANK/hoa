@@ -194,10 +194,25 @@ const roamBands = [
   // that band's wash and its own white haze, and at 0.34 the far band arrived at
   // 1.03-2.09:1 against the ground it stands on. bandtext.mjs holds every band at
   // 3:1 or better, WCAG's non-text minimum.
+  //
+  // The lead walker sat at top: 90, which put it in the ground fern rather than in
+  // front of it or above it. The fern band is 17vh of opaque near-black silhouette
+  // (.canopy--front, opacity 1, colour #020302) and its mass covers 36-72% of every
+  // row from y760 to the bottom of a 900px viewport. A 166px walker whose feet are at
+  // y90 only shows 92px above the fold, and every one of those pixels was under the
+  // fern, so the largest ape on the page measured 1.61:1 against the ground behind it
+  // and the crop showed a smear where a body should be. It was the single worst ape
+  // anywhere on the site and it was the one meant to carry the subject.
+  //
+  // top: 77 stands the same walker on the fern instead: fully on screen at 165 of its
+  // 166px, 8274 ink pixels instead of 1113, 3.46:1, with its lower 2418 px still lost
+  // behind the fronds - which is the depth cue the layer is for. Raising it further
+  // measures no better (71% gives 3.29:1), so this is the line the fern is designed
+  // against, not a taste call. canopydepth.mjs re-measures the same number per depth.
   { n: 3, size: 34, dur: 168, dir: 1, opacity: 0.62, top: 40, bob: 0.5 },
   { n: 2, size: 58, dur: 124, dir: -1, opacity: 0.64, top: 55, bob: 0.8 },
   { n: 2, size: 104, dur: 88, dir: 1, opacity: 0.76, top: 72, bob: 1 },
-  { n: 1, size: 168, dur: 62, dir: -1, opacity: 0.9, top: 90, bob: 1.4 },
+  { n: 1, size: 168, dur: 62, dir: -1, opacity: 0.9, top: 77, bob: 1.4 },
 ];
 
 const bandPoses = ['stride', 'carry', 'hunch', 'forage', 'stride', 'hunch', 'carry', 'hunch', 'stride', 'forage'];

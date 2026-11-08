@@ -28,6 +28,7 @@
 // Pass --alpha=0.3 to explore alternatives; with no flag the script measures the
 // stylesheet as authored, which is what CI runs.
 import { chromium } from 'playwright-core';
+import { lum, ratio } from './lib/contrast.mjs';
 
 const EXE =
   process.env.CHROME_PATH ??
@@ -67,10 +68,6 @@ const decode = async (page, buffer) => {
 
 const differs = (a, b, p) =>
   Math.abs(a.d[p] - b.d[p]) + Math.abs(a.d[p + 1] - b.d[p + 1]) + Math.abs(a.d[p + 2] - b.d[p + 2]) > 6;
-
-const lum = (a, p) => (0.2126 * a.d[p] + 0.7152 * a.d[p + 1] + 0.0722 * a.d[p + 2]) / 255;
-
-const ratio = (x, y) => (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 
 const percentile = (xs, q) => {
   if (!xs.length) return null;

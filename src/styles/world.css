@@ -671,7 +671,16 @@
   .roam__walker:nth-child(-n + 3) { display: none; }
   .roam__walker:nth-child(n + 4):nth-child(-n + 5) { top: 68% !important; }
   .roam__walker:nth-child(n + 6):nth-child(-n + 7) { top: 82% !important; }
-  .roam__walker:nth-child(8) { top: 94% !important; }
+  /* The lead walker, and the worst defect on the mobile page before this. On an
+     844px viewport the fern band occupies y701-844 solid, and top: 94% dropped the
+     168px body to y792-957: 52px above the fold, all of it inside the fern. It
+     contributed exactly zero measurable pixels - not low contrast, nothing. The
+     largest ape a phone could see was not on screen at all.
+     top: 80% puts the whole 166px body on screen (y674-839) at 6.42:1, feet still
+     behind the fronds. Higher measures worse rather than better, because the copy
+     column and the band washes take over above about 64%: 72% reads 7.96:1 but sits
+     the walker in the paragraph, 56% falls to 3.16:1. */
+  .roam__walker:nth-child(8) { top: 80% !important; }
 }
 
 /* The apes are the subject, so switching motion off must not delete them. Two

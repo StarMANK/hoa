@@ -1,40 +1,54 @@
 // Does the canopy veil erase the subject?
 //
 // world.css states the depth order as void > treeline > canopy far > roam (apes) >
-// canopy near, and .canopy--near / .canopy--front really are z-index 1 while the
-// procession is 0 and the roam layer is -1. Foliage is deliberately painted in front
-// of the subject: an ape walks behind a frond. Measured, that is not a small detail.
-// On desktop the foreground band (y756-900 plus a strip along the top) darkens every
-// pixel it touches by a mean delta of 18-33, and the near procession apes stand in it
-// almost completely: 96-100% of their ink has foliage in front of it. So the veil is
-// not decoration brushing past the subject, it is the last thing painted over the
-// subject. Nothing measured whether the apes survive it.
+// canopy near, and .canopy--near / .canopy--front really are z-index 1. Whether that
+// puts foliage in front of an ape, though, depends on which ape: the hero procession
+// lives inside .hero, which is position:relative z-index:2 and therefore a stacking
+// context above the canopy, so a hero walker paints over the fronds. The roam walkers
+// are direct children of .world at z-index 0, so the same foliage paints over them. The
+// stylesheet comment describes one order; the cascade implements two.
 //
-// Two ways this can go wrong, and two metrics for them:
+// Front and back cannot be read off a pixel diff, which is what this script first tried
+// and what made its numbers meaningless. Hiding the foliage changes a walker's pixels
+// from behind too, because the walkers are translucent, so "the pixel moved when the
+// leaves went away" was scored as occlusion at the hero and reported 96% coverage on
+// apes that were standing in front of everything. Contrast is now only computed for ink
+// the browser agrees is genuinely behind the leaves.
 //
-//   1. the veil erases the subject. Occlusion itself is the intended look, so the
-//      gate is not coverage (a first cut of this script failed three viewports at
-//      40% coverage, which is meaningless: an ape standing in undergrowth is supposed
-//      to be occluded, and near-total occlusion by a dim veil can be perfectly
-//      legible). The gate is contrast between what the ape draws behind the leaves
-//      and the same leaves over bare ground. Floor is 3:1, the WCAG 1.4.11 non-text
-//      contrast minimum, which exists for exactly this kind of meaningful graphic.
-//   2. the veil covers words. Scenery in front of a heading or a button is a defect
-//      at any depth, because it is the text the visitor came to read.
+// Hit testing needs one probe-only adjustment, and it is the kind of trap that makes a
+// green probe worse than none. .canopy is pointer-events: none, which is correct for a
+// decorative layer and fatal for elementsFromPoint, because that API skips such
+// elements entirely. Asked what is on top of an ape, it answered "hero, world, body" and
+// never mentioned the canopy, so every ape looked unoccluded and every text box looked
+// clear: both halves of the check passed on nothing at all. The probe re-enables pointer
+// events on the canopy alone, which changes hit-testability without touching paint order,
+// so the returned stack is the real stacking order.
 //
-// Boxes and bounding geometry mislead on both counts, so both metrics work on paint
-// or on the browser's own hit-testing:
+// Two frames differ only in whether the apes are painted. Everything else, the canopy
+// included, is identical between them, so the delta at any pixel is exactly what the ape
+// contributes after the leaves in front of it. That makes the delta the number to gate:
+// an ape washed out by foliage shows up as a small delta, which is the defect, and an ape
+// standing in the open shows up as a large one.
 //
-//   - Counting changed pixels inside an element box asked the wrong question for
-//     text. 82.5% of the hero blurb's box shifts when the front fern is hidden, yet
-//     elementFromPoint shows those glyphs belong to `.hero`, which is
-//     position:relative z-index:2 and therefore a stacking context above the canopy's
-//     z-index 1. The 82.5% was ground between letters. Hence the grid of
-//     elementFromPoint probes instead of pixel deltas for text.
-//   - A box is the wrong shape for an ape too: a walker's box is mostly empty space
-//     around a crouched silhouette, so foliage behind the box counts as coverage.
-//     Ape ink is therefore found by toggling the ape layers and diffing.
+// The previous version compared each ape against a "bare" frame with the foliage hidden
+// too, so a pixel of an in-front ape that happened to overlap a leaf was scored as
+// leaf-over-ground instead of ape-over-background. That is how a walker the screenshot
+// shows clearly visible came out at 1.15:1: the number was measuring the leaf, not the
+// ape. A single background frame removes that whole class of error.
+//
+// What is gated, per viewport and scroll depth:
+//
+//   1. foliage is never topmost over words. Scenery in front of a heading or a button
+//      is a defect at any depth. Probed on a grid, not by pixel deltas: 82.5% of the
+//      hero blurb's box shifts when the front fern is hidden, yet those glyphs belong
+//      to .hero above the canopy, so the 82.5% was ground between letters.
+//   2. an ape that is genuinely behind the veil still reads at 3:1, WCAG 1.4.11's
+//      non-text minimum. Occlusion is the intended look; erasure is not.
+//   3. the subject survives the depth. At least one walker big enough to be the
+//      subject has to clear the same floor on screen, occluded or not, so a page that
+//      leaves only smudges in the undergrowth cannot pass.
 import { chromium } from 'playwright-core';
+import { lum, ratio } from './lib/contrast.mjs';
 
 const EXE =
   process.env.CHROME_PATH ??
@@ -42,6 +56,8 @@ const EXE =
 
 const MIN_CONTRAST = 3; // WCAG 1.4.11, non-text contrast minimum
 const MIN_INK = 200; // below this an ape is too small to judge occlusion on
+const SUBJECT_PX = 60; // a walker this wide is big enough to carry the subject
+const GRID = 6; // px per occlusion cell: fine enough to split a leaf edge across a body
 
 const browser = await chromium.launch({
   executablePath: EXE,
@@ -68,14 +84,17 @@ const decode = async (page, buffer) => {
 
 const HIDE_FG = '.canopy--near, .canopy--front { visibility: hidden !important; }';
 const HIDE_APES = '.procession, .roam__walker { visibility: hidden !important; }';
-const TEXT = '.hero h1, .hero .lead, .hero .body-copy, .cta, .rail__item, .scroll-hint';
+// Content bands sit above the roam layer and wash over apes too. That occlusion is real
+// but it belongs to bandtext.mjs, so those pixels are excluded here rather than charged
+// to the canopy.
+const BANDS = '.trail, .join, .section--dark, .marks, .rule';
+
+const TEXT =
+  '.hero h1, .hero .lead, .hero .body-copy, .cta, .rail__item, .scroll-hint, ' +
+  '.chapter__copy p, .chapter__title, .join h2, .join__card p, .rule p, .section-head h2';
 
 const differs = (a, b, p) =>
   Math.abs(a.d[p] - b.d[p]) + Math.abs(a.d[p + 1] - b.d[p + 1]) + Math.abs(a.d[p + 2] - b.d[p + 2]) > 6;
-
-const lum = (a, p) => (0.2126 * a.d[p] + 0.7152 * a.d[p + 1] + 0.0722 * a.d[p + 2]) / 255;
-
-const ratio = (x, y) => (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
 
 const median = (xs) => {
   if (!xs.length) return null;
@@ -84,6 +103,10 @@ const median = (xs) => {
 };
 
 const failures = [];
+// Total across depths: a run where nothing at all was ever judged behind the veil means
+// the occlusion half of this script proved nothing and must not pass silently.
+let occludedInkTotal = 0;
+let depthsProbed = 0;
 
 for (const [label, vp, scrollFrac] of [
   ['desktop hero', { width: 1440, height: 900 }, 0],
@@ -96,102 +119,169 @@ for (const [label, vp, scrollFrac] of [
   await page.evaluate((f) => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * f), scrollFrac);
   await page.waitForTimeout(1200);
   await page.addStyleTag({ content: '*, *::before, *::after { animation-play-state: paused !important; }' });
+  // Probe-only: make the decorative canopy and the walkers hittable so elementsFromPoint
+  // reports them. Both inherit pointer-events: none from their layer, and without this the
+  // stack answers "hero, world, body" and the whole occlusion test runs on nothing.
+  await page.addStyleTag({
+    content: '.canopy, .canopy *, .ape { pointer-events: auto !important; }',
+  });
   await page.waitForTimeout(300);
 
-  const apes = await page.evaluate(() => {
-    const out = [];
-    for (const el of document.querySelectorAll('.procession__walker .ape, .roam__walker .ape')) {
-      const r = el.getBoundingClientRect();
-      if (r.width < 4 || r.height < 4) continue;
-      if (r.bottom < 0 || r.top > innerHeight) continue;
-      out.push({ x: Math.round(r.left), y: Math.round(r.top), width: Math.round(r.width), height: Math.round(r.height) });
-    }
-    return out;
-  });
+  // Which apes are on screen, and for each one a coarse mask saying whether the canopy
+  // paints over it there. Front or back is decided per cell, not per ape, because a
+  // walker straddling a leaf line is half behind it and that half is the interesting part.
+  // The ape itself is looked for in the hit stack, so forcing pointer-events on it matters
+  // for the same reason it does for the canopy.
+  const apes = await page.evaluate(
+    ([sel, bandSel, step]) => {
+      const isCanopy = (el) => !!el?.closest?.('.canopy');
+      const bands = [...document.querySelectorAll(bandSel)].map((el) => el.getBoundingClientRect());
+      const out = [];
+      for (const el of document.querySelectorAll(sel)) {
+        const r = el.getBoundingClientRect();
+        if (r.width < 4 || r.height < 4) continue;
+        if (r.bottom < 0 || r.top > innerHeight) continue;
+        const cols = Math.ceil(r.width / step);
+        const rows = Math.ceil(r.height / step);
+        const mask = new Uint8Array(cols * rows); // 0 unprobed, 1 open, 2 canopy over, 3 band over
+        let probed = 0;
+        let over = 0;
+        let i = 0;
+        for (let cy = 0; cy < rows; cy++) {
+          const y = Math.round(r.top + cy * step + step / 2);
+          for (let cx = 0; cx < cols; cx++, i++) {
+            const x = Math.round(r.left + cx * step + step / 2);
+            if (x < 0 || y < 0 || x >= innerWidth || y >= innerHeight) continue;
+            const stack = document.elementsFromPoint(x, y);
+            const apeIdx = stack.indexOf(el);
+            if (apeIdx < 0) continue;
+            probed += 1;
+            let canopyIdx = -1;
+            for (let k = 0; k < apeIdx; k++) {
+              if (isCanopy(stack[k])) { canopyIdx = k; break; }
+            }
+            if (canopyIdx >= 0) {
+              mask[i] = 2;
+              over += 1;
+            } else {
+              const covered = bands.some((b) => x >= b.left && x < b.right && y >= b.top && y < b.bottom);
+              mask[i] = covered ? 3 : 1;
+            }
+          }
+        }
+        out.push({
+          x: Math.round(r.left),
+          y: Math.round(r.top),
+          width: Math.round(r.width),
+          height: Math.round(r.height),
+          step,
+          cols,
+          mask: Array.from(mask),
+          probed,
+          overPct: probed ? +((over / probed) * 100).toFixed(0) : 0,
+        });
+      }
+      return out;
+    },
+    ['.procession__walker .ape, .roam__walker .ape', BANDS, GRID],
+  );
 
-  // Four frames that differ only in what is painted:
-  //   painted     everything
-  //   noFoliage    apes, ground, no foreground leaves
-  //   bare         ground only
-  //   through      foreground leaves over ground, no apes
+  // Two frames. Hiding the apes leaves the canopy and the ground exactly as they were, so
+  // every differing pixel is the ape's own contribution as actually composited, leaves and
+  // all, and the contrast of that against the same pixel without the ape is the number a
+  // viewer experiences.
   const painted = await decode(page, await page.screenshot());
+  await page.addStyleTag({ content: HIDE_APES });
+  await page.waitForTimeout(300);
+  const noApes = await decode(page, await page.screenshot());
+  await page.addStyleTag({ content: HIDE_APES.replace('hidden', 'visible') });
+  await page.waitForTimeout(200);
+
+  // How much of the foreground the canopy draws, measured by hiding it. Reported so a
+  // depth where the veil is off screen is visible in the output rather than assumed.
   await page.addStyleTag({ content: HIDE_FG });
   await page.waitForTimeout(300);
   const noFoliage = await decode(page, await page.screenshot());
-  await page.addStyleTag({ content: HIDE_APES });
-  await page.waitForTimeout(300);
-  const bare = await decode(page, await page.screenshot());
   await page.addStyleTag({ content: HIDE_FG.replace('hidden', 'visible') });
-  await page.waitForTimeout(300);
-  const through = await decode(page, await page.screenshot());
+  await page.waitForTimeout(200);
 
   console.log(`\n[${label}] ${apes.length} apes on screen`);
 
-  let judged = 0;
-  let worstRatio = null;
-  let worstIndex = -1;
+  let occludedJudged = 0;
+  let occludedInk = 0;
+  let worst = null;
+  let subjectBest = null;
   for (const [i, box] of apes.entries()) {
     const x0 = Math.max(0, box.x);
     const y0 = Math.max(0, box.y);
     const x1 = Math.min(painted.w, box.x + box.width);
     const y1 = Math.min(painted.h, box.y + box.height);
-    let ink = 0;
-    const behind = []; // ape drawn, foliage in front of it
+    const behind = [];
+    const open = [];
     for (let y = y0; y < y1; y += 1) {
       for (let x = x0; x < x1; x += 1) {
         const p = (y * painted.w + x) * 4;
-        // Is this ape ink? Compare foliage-off with apes also off, so nothing in
-        // front of the ape can contribute to the difference.
-        if (!differs(noFoliage, bare, p)) continue;
-        ink += 1;
-        // Is foliage in front of it? Hiding the foliage has to change the pixel;
-        // if the ape were in front of the leaves, hiding them would change nothing.
-        if (!differs(painted, noFoliage, p)) continue;
-        behind.push(ratio(lum(painted, p), lum(through, p)));
+        // Is this the ape's own ink, as composited?
+        if (!differs(painted, noApes, p)) continue;
+        const cx = Math.floor((x - box.x) / box.step);
+        const cy = Math.floor((y - box.y) / box.step);
+        const cell = cx >= 0 && cx < box.cols ? box.mask[cy * box.cols + cx] : 0;
+        // cell 3 is a content band, judged by bandtext.mjs; 0 is unprobed ground.
+        if (cell === 2) behind.push(ratio(lum(painted, p), lum(noApes, p)));
+        else if (cell === 1) open.push(ratio(lum(painted, p), lum(noApes, p)));
       }
     }
-    if (ink < MIN_INK || behind.length < MIN_INK) {
-      if (ink >= MIN_INK) {
-        console.log(`  ape #${i} ${box.width}x${box.height} at y${box.y}: ${ink} ink px, none behind foliage`);
+    const ink = behind.length + open.length;
+    if (ink < MIN_INK) continue;
+    const subject = box.width >= SUBJECT_PX;
+    if (behind.length >= MIN_INK) {
+      occludedJudged += 1;
+      occludedInk += behind.length;
+      const med = median(behind);
+      console.log(
+        `  ape #${i} ${box.width}x${box.height} at y${box.y}: ${behind.length} ink px behind foliage ` +
+          `(${box.overPct}% of its box), median contrast ${med.toFixed(2)}:1`,
+      );
+      if (med < MIN_CONTRAST) {
+        failures.push(`${label}: ape #${i} reads only ${med.toFixed(2)}:1 through the foliage veil`);
       }
-      continue;
+      if (worst === null || med < worst) worst = med;
+      if (subject && (subjectBest === null || med > subjectBest)) subjectBest = med;
     }
-    judged += 1;
-    const med = median(behind);
-    const clearContrasts = [];
-    for (let y = y0; y < y1; y += 1) {
-      for (let x = x0; x < x1; x += 1) {
-        const p = (y * painted.w + x) * 4;
-        if (!differs(noFoliage, bare, p)) continue;
-        if (differs(painted, noFoliage, p)) continue; // behind foliage: already counted
-        clearContrasts.push(ratio(lum(noFoliage, p), lum(bare, p)));
-      }
+    if (open.length >= MIN_INK) {
+      const med = median(open);
+      console.log(
+        `  ape #${i} ${box.width}x${box.height} at y${box.y}: in front of the foliage, ${open.length} ink px, ` +
+          `median contrast ${med.toFixed(2)}:1`,
+      );
+      if (subject && (subjectBest === null || med > subjectBest)) subjectBest = med;
     }
-    const medClear = median(clearContrasts);
-    console.log(
-      `  ape #${i} ${box.width}x${box.height} at y${box.y}: ${ink} ink px, ${behind.length} behind foliage ` +
-        `(${((behind.length / ink) * 100).toFixed(0)}%), median CR through veil ${med.toFixed(2)}` +
-        `${medClear ? `, unobstructed ${medClear.toFixed(2)}` : ''}`,
-    );
-    if (worstRatio === null || med < worstRatio) {
-      worstRatio = med;
-      worstIndex = i;
-    }
-    if (med < MIN_CONTRAST) {
-      failures.push(`${label}: ape #${i} reads only ${med.toFixed(2)}:1 through the foliage veil`);
+    if (behind.length >= MIN_INK || open.length >= MIN_INK) continue;
+    if (subject) {
+      failures.push(
+        `${label}: the ${box.width}px walker is on screen but contributes only ${ink} measurable ink px, ` +
+          'it is washed out rather than seen',
+      );
     }
   }
-  console.log(
-    worstRatio === null
-      ? `  no ape was large enough behind the veil to judge (${MIN_INK} ink px required)`
-      : `  worst judged ape: #${worstIndex} at ${worstRatio.toFixed(2)}:1 (floor ${MIN_CONTRAST}:1)`,
-  );
 
-  // Is the foliage ever painted over words? Ask the browser what is on top rather
-  // than trusting pixel deltas, so no stacking context can fool it.
+  if (subjectBest === null) {
+    failures.push(`${label}: no walker ${SUBJECT_PX}px or wide was measurable, nothing can carry the subject`);
+  } else {
+    console.log(`  best walker >=${SUBJECT_PX}px: ${subjectBest.toFixed(2)}:1 (floor ${MIN_CONTRAST}:1)`);
+    if (subjectBest < MIN_CONTRAST) {
+      failures.push(`${label}: the best large walker manages only ${subjectBest.toFixed(2)}:1`);
+    }
+  }
+  if (worst !== null) console.log(`  worst occluded ape: ${worst.toFixed(2)}:1 (floor ${MIN_CONTRAST}:1)`);
+  else console.log(`  no ape was behind the foliage at this depth`);
+  occludedInkTotal += occludedInk;
+
+  // Is the foliage ever painted over words? Same hit-test as above, on text boxes.
   const overText = await page.evaluate((sel) => {
-    const isCanopy = (el) => el?.closest?.('.canopy');
+    const isCanopy = (el) => !!el?.closest?.('.canopy');
     const out = [];
+    let boxes = 0;
     for (const el of document.querySelectorAll(sel)) {
       const r = el.getBoundingClientRect();
       if (r.width < 6 || r.height < 6) continue;
@@ -208,35 +298,49 @@ for (const [label, vp, scrollFrac] of [
           if (isCanopy(top)) inFront += 1;
         }
       }
-      if (probed && inFront) {
+      if (!probed) continue;
+      boxes += 1;
+      if (inFront) {
         out.push({
           label: (el.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 24) || el.className,
           pct: +((inFront / probed) * 100).toFixed(1),
         });
       }
     }
-    return out;
+    return { offenders: out, boxes };
   }, TEXT);
 
-  if (!overText.length) console.log('  canopy painted over text: nowhere');
-  for (const t of overText) console.log(`  canopy painted over text: "${t.label}" at ${t.pct}% of sampled points`);
-  if (overText.length) failures.push(`${label}: canopy paints over ${overText.length} text element(s)`);
+  console.log(`  text boxes probed for foliage on top: ${overText.boxes}`);
+  if (!overText.offenders.length) console.log('  canopy painted over text: nowhere');
+  for (const t of overText.offenders) console.log(`  canopy painted over text: "${t.label}" at ${t.pct}% of sampled points`);
+  if (overText.offenders.length) failures.push(`${label}: canopy paints over ${overText.offenders.length} text element(s)`);
+  if (!overText.boxes) failures.push(`${label}: no text was on screen, the foliage-over-words check is vacuous`);
 
-  // Anti-vacuous: the veil must actually be painting, and apes must be standing in
-  // it, or every measurement above passed by measuring nothing.
+  // Anti-vacuous: the veil must actually be painting, or the occlusion half of every
+  // measurement above passed by measuring nothing.
   let paintedPct = 0;
   for (let p = 0; p < painted.d.length; p += 4) if (differs(painted, noFoliage, p)) paintedPct += 1;
   paintedPct = (paintedPct / (painted.w * painted.h)) * 100;
-  console.log(`  foreground foliage paints ${paintedPct.toFixed(1)}% of the viewport, ${judged} ape(s) judged`);
+  console.log(
+    `  foreground foliage paints ${paintedPct.toFixed(1)}% of the viewport, ` +
+      `${occludedJudged} ape(s) judged behind it`,
+  );
   if (paintedPct < 1) {
     failures.push(`${label}: foreground draws only ${paintedPct.toFixed(1)}% of the viewport, the veil is not on screen`);
   }
-  if (!judged) failures.push(`${label}: no ape was behind the veil, occlusion check is vacuous`);
+  depthsProbed += 1;
 
   await page.context().close();
 }
 
 await browser.close();
+
+if (!occludedInkTotal) {
+  failures.push(
+    `no ape anywhere on the page was found behind the canopy across ${depthsProbed} depths, ` +
+      'the occlusion half of this check never fired',
+  );
+}
 
 if (failures.length) {
   console.error('\nFAIL');
