@@ -67,7 +67,9 @@
 .canopy--far { z-index: -5; }
 .canopy--mid { z-index: -4; }
 .canopy--near { z-index: 1; }
-.canopy--front { z-index: 9; }
+/* Ground fern sits in front of the apes but behind the copy, so it frames the
+   view without ever covering text. */
+.canopy--front { z-index: 1; }
 
 .canopy--far .canopy__band--top { opacity: 0.55; transform: translate3d(calc(var(--px) * -0.6rem), 0, 0); }
 .canopy--far .canopy__band--bottom { opacity: 0.5; transform: translate3d(calc(var(--px) * -0.6rem), 0, 0); }
@@ -77,12 +79,30 @@
 .canopy__band--top { top: 0; }
 .canopy__band--bottom { bottom: 0; }
 
-/* Near foliage is the darkest thing on screen and swings hardest with the
-   pointer, which is what makes the depth read. */
+/* Near foliage sits in front of the apes but behind the content, so the walkers
+   pass through the scene instead of floating over it. */
 .canopy--near .canopy__band--top { color: #040605; opacity: 0.95; transform: translate3d(calc(var(--px) * -3.2rem), 0, 0); }
 .canopy--front .canopy__band--bottom { color: #020302; transform: translate3d(calc(var(--px) * 4.4rem), 0, 0); }
 
 .canopy__band { transition: transform 1.4s var(--ease-out); }
+
+/* A single frond above the content in the top-left corner. Any more than this
+   covered the copy. */
+.frond-frame {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: min(30vw, 24rem);
+  height: min(30vw, 24rem);
+  z-index: 8;
+  pointer-events: none;
+  color: #010201;
+  transform: translate3d(calc(var(--px) * 6rem), calc(var(--py) * 3rem), 0);
+  transition: transform 1.6s var(--ease-out);
+  opacity: 0.9;
+}
+
+.frond-frame__svg { width: 100%; height: 100%; }
 
 /* Ground haze sitting over the treeline base. */
 .world-fog {
@@ -278,6 +298,11 @@
   display: grid;
   align-content: center;
   gap: clamp(0.9rem, 1.6vw, 1.3rem);
+  /* Every other band sits inside --shell with --edge gutters; the hero was
+     flush against the viewport edge, so its type started at x=0. */
+  width: var(--shell);
+  margin-inline: auto;
+  padding-inline: clamp(0rem, 1.5vw, 1.5rem);
   padding-block: clamp(3rem, 6vh, 5rem) clamp(2.5rem, 6vh, 4rem);
   perspective: 1200px;
 }
@@ -455,14 +480,16 @@
    rate, so the line never sits still but never leaves the fold either. */
 .procession {
   position: absolute;
-  left: 0;
+  /* Breaks out of the hero gutter so the line enters from the viewport edge,
+     as it does in the reference. */
+  left: calc(50% - 50vw);
   right: 0;
   bottom: clamp(1rem, 4vh, 3rem);
   z-index: 0;
   display: flex;
   align-items: flex-end;
   gap: clamp(0.5rem, 2.4vw, 2.6rem);
-  padding-left: clamp(1rem, 6vw, 5rem);
+  padding-left: clamp(1rem, 4vw, 3rem);
   pointer-events: none;
   mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 96%);
 }

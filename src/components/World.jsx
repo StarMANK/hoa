@@ -15,117 +15,188 @@ function prng(seed) {
   };
 }
 
-// A treeline: solid ground with a crown line of overlapping arcs on top, plus a
-// few bare trunks poking through. Reads as "jungle edge" at any scale.
-function treeLine({ w, h, seed, crowns, trunkCount }) {
+// A compound frond: a curved stem with leaflets on both sides shrinking toward
+// the tip. Drawn as one filled path so it stays a flat silhouette.
+function frond(x, y, len, angleDeg, seed, leaflets = 9) {
   const rand = prng(seed);
-  const step = w / crowns;
-  let d = `M0 ${h}`;
-  for (let i = 0; i < crowns; i += 1) {
-    const x0 = i * step;
-    const x1 = x0 + step;
-    const peak = h - (0.35 + rand() * 0.65) * h;
-    d += ` Q${x0 + step * 0.25} ${peak} ${x0 + step * 0.55} ${peak + h * 0.06}`;
-    d += ` Q${x1 - step * 0.18} ${h * (0.1 + rand() * 0.2)} ${x1} ${h - rand() * h * 0.18}`;
+  const a = (angleDeg * Math.PI) / 180;
+  const cx = x + Math.sin(a) * len * 0.5 + Math.cos(a) * len * 0.18;
+  const cy = y + Math.cos(a) * len * 0.5 - Math.sin(a) * len * 0.18;
+  const tx = x + Math.sin(a) * len;
+  const ty = y + Math.cos(a) * len;
+  const parts = [];
+
+  for (let i = 0; i < leaflets; i += 1) {
+    const t = 0.08 + (i / leaflets) * 0.9;
+    // Point on the quadratic stem.
+    const px = (1 - t) * (1 - t) * x + 2 * (1 - t) * t * cx + t * t * tx;
+    const py = (1 - t) * (1 - t) * y + 2 * (1 - t) * t * cy + t * t * ty;
+    const size = len * (0.3 - (i / leaflets) * 0.22) * (0.75 + rand() * 0.5);
+    for (const side of [-1, 1]) {
+      const spread = a + side * (1.05 - (i / leaflets) * 0.5);
+      const lx = px + Math.sin(spread) * size;
+      const ly = py + Math.cos(spread) * size;
+      const bx = px + Math.sin(spread + side * 0.55) * size * 0.45;
+      const by = py + Math.cos(spread + side * 0.55) * size * 0.45;
+      parts.push(`M${px} ${py}Q${bx} ${by} ${lx} ${ly}Q${px + Math.sin(spread - side * 0.4) * size * 0.3} ${py + Math.cos(spread - side * 0.4) * size * 0.3} ${px} ${py}Z`);
+    }
   }
-  d += ` L${w} ${h} Z`;
 
-  const trunks = Array.from({ length: trunkCount }, (_, i) => {
-    const x = w * (0.06 + rand() * 0.88);
-    const tw = 3 + rand() * 5;
-    const top = h * (0.18 + rand() * 0.4);
-    return `M${x - tw} ${h} L${x - tw * 0.6} ${top} Q${x} ${top - 6} ${x + tw * 0.6} ${top} L${x + tw} ${h} Z`;
-  });
-
-  return `${d} ${trunks.join(' ')}`;
+  // Stem last so it welds the leaflets into one mass.
+  const stem = `M${x} ${y}Q${cx} ${cy} ${tx} ${ty}Q${cx - 3} ${cy + 3} ${x} ${y + 2}Z`;
+  return `${parts.join(' ')} ${stem}`;
 }
 
-// A hanging leaf: two mirrored curves meeting at a tip.
-function leaf(x, y, len, girth, lean) {
-  const tx = x + lean;
-  const ty = y + len;
+// A jagged crown line. One smooth curve per crown read as giant black petals, so
+// the horizon is instead sampled as a polyline: a slow low-frequency profile for
+// the mass of the trees, high-frequency jitter for twigs and broken tops, and
+// occasional sharp spikes where a tree or palm punches above the line.
+function crown(w, h, seed, points) {
+  const rand = prng(seed);
+  const phA = rand() * Math.PI * 2;
+  const phB = rand() * Math.PI * 2;
+  const spikes = new Map();
+  const spikeCount = Math.max(3, Math.round(w / 260));
+  for (let s = 0; s < spikeCount; s += 1) {
+    spikes.set(Math.round(rand() * points), 0.22 + rand() * 0.3);
+  }
+
+  const pts = [];
+  for (let i = 0; i <= points; i += 1) {
+    const t = i / points;
+    const slow =
+      Math.sin(t * Math.PI * 2 * 1.7 + phA) * 0.16 +
+      Math.sin(t * Math.PI * 2 * 3.3 + phB) * 0.09;
+    const jitter = (rand() - 0.5) * 0.14;
+    let rise = 0.34 + slow + jitter;
+    // A spike lifts the two neighbours too, so it reads as a pointed top rather
+    // than a lone tooth.
+    for (const offset of [-1, 0, 1]) {
+      const sp = spikes.get(i + offset);
+      if (sp) rise += sp * (offset === 0 ? 1 : 0.45);
+    }
+    pts.push([t * w, h - Math.min(0.98, Math.max(0.08, rise)) * h]);
+  }
+  return pts;
+}
+
+// A treeline horizon: solid ground under a jagged crown, bare trunks poking
+// through, and a rake of grass along the base line so nothing looks cut out.
+function treeLine({ w, h, seed, points = 90, trunkCount, spikes = 6 }) {
+  const rand = prng(seed);
+  const pts = crown(w, h, seed, points);
+  let d = `M0 ${h} L${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L')} L${w} ${h} Z`;
+
+  const trunks = Array.from({ length: trunkCount }, () => {
+    const x = w * (0.05 + rand() * 0.9);
+    const tw = 2.5 + rand() * 4;
+    const top = h * (0.15 + rand() * 0.4);
+    return `M${x - tw} ${h} L${x - tw * 0.5} ${top} Q${x} ${top - 5} ${x + tw * 0.5} ${top} L${x + tw} ${h} Z`;
+  });
+
+  const grass = Array.from({ length: spikes * 6 }, () => {
+    const x = w * rand();
+    const bh = h * (0.06 + rand() * 0.16);
+    const bend = (rand() - 0.5) * 14;
+    return `M${x.toFixed(1)} ${h}Q${(x + bend * 0.5).toFixed(1)} ${(h - bh * 0.6).toFixed(1)} ${(x + bend).toFixed(1)} ${(h - bh).toFixed(1)}Q${(x + bend * 0.3).toFixed(1)} ${(h - bh * 0.5).toFixed(1)} ${(x + 2.5).toFixed(1)} ${h}Z`;
+  });
+
+  return `${d} ${trunks.join(' ')} ${grass.join(' ')}`;
+}
+
+// Canopy overhead: the same jagged crown flipped, so the top mass hangs into
+// frame with pointed frond tips, plus a few long fronds dropping out of it.
+function topCanopy({ w, h, seed, points = 70, frondCount }) {
+  const rand = prng(seed);
+  const pts = crown(w, h, seed, points)
+    .map(([x, y]) => `${x.toFixed(1)} ${(h - y).toFixed(1)}`)
+    .reverse();
+  const d = `M0 0 L${w} 0 L${pts.join(' L')} Z`;
+
+  const fronds = Array.from({ length: frondCount }, (_, i) => {
+    const x = w * ((i + 0.2 + rand() * 0.6) / frondCount);
+    const len = h * (0.5 + rand() * 0.7);
+    return frond(x, h * (0.08 + rand() * 0.2), len, (rand() - 0.5) * 90, seed + i * 17);
+  });
+
+  return `${d} ${fronds.join(' ')}`;
+}
+
+// Ground fern: a jagged mound with upright fronds and grass blades.
+function groundFern({ w, h, seed, points = 90, frondCount }) {
+  const rand = prng(seed);
+  const pts = crown(w, h, seed + 5, points);
+  let d = `M0 ${h} L${pts.map(([x, y]) => `${x.toFixed(1)} ${y.toFixed(1)}`).join(' L')} L${w} ${h} Z`;
+
+  const fronds = Array.from({ length: frondCount }, (_, i) => {
+    const x = w * ((i + 0.15 + rand() * 0.7) / frondCount);
+    const len = h * (0.7 + rand() * 0.75);
+    return frond(x, h * (0.55 + rand() * 0.35), len, (rand() - 0.5) * 70, seed + i * 31);
+  });
+
+  const grass = Array.from({ length: 42 }, () => {
+    const x = w * rand();
+    const bh = h * (0.2 + rand() * 0.55);
+    const bend = (rand() - 0.5) * 26;
+    return `M${x} ${h}Q${x + bend * 0.5} ${h - bh * 0.6} ${x + bend} ${h - bh}Q${x + bend * 0.4} ${h - bh * 0.55} ${x + 3} ${h}Z`;
+  });
+
+  return `${d} ${fronds.join(' ')} ${grass.join(' ')}`;
+}
+
+// Depth bands, back to front. Heights are viewport-relative so the foliage
+// frames the page instead of eating it, and contrast falls off with distance.
+const layers = [
+  { key: 'far-tree', cls: 'far', edge: 'bottom', z: -5, vh: 16, w: 1600, h: 220, kind: 'tree', seed: 11, points: 110, trunks: 5, spikes: 6, opacity: 0.55 },
+  { key: 'mid-tree', cls: 'mid', edge: 'bottom', z: -4, vh: 23, w: 1300, h: 260, kind: 'tree', seed: 37, points: 80, trunks: 7, spikes: 5, opacity: 0.8 },
+  { key: 'top-canopy', cls: 'mid', edge: 'top', z: -4, vh: 24, w: 1400, h: 300, kind: 'top', seed: 23, points: 90, fronds: 9, opacity: 0.85 },
+  { key: 'near-canopy', cls: 'near', edge: 'top', z: 1, vh: 15, w: 1100, h: 240, kind: 'top', seed: 67, points: 60, fronds: 6, opacity: 1 },
+  { key: 'front-fern', cls: 'front', edge: 'bottom', z: 1, vh: 17, w: 1100, h: 260, kind: 'fern', seed: 83, points: 100, fronds: 7, opacity: 1 },
+];
+
+function layerPath(l) {
+  if (l.kind === 'tree') return treeLine({ w: l.w, h: l.h, seed: l.seed, points: l.points, trunkCount: l.trunks, spikes: l.spikes });
+  if (l.kind === 'fern') return groundFern({ w: l.w, h: l.h, seed: l.seed, points: l.points, frondCount: l.fronds });
+  return topCanopy({ w: l.w, h: l.h, seed: l.seed, points: l.points, frondCount: l.fronds });
+}
+
+function Band({ layer }) {
   return (
-    `M${x} ${y}` +
-    `C${x - girth} ${y + len * 0.3} ${x - girth * 0.7} ${y + len * 0.75} ${tx} ${ty}` +
-    `C${x + girth * 0.9} ${y + len * 0.7} ${x + girth} ${y + len * 0.3} ${x} ${y}Z`
+    <svg
+      className={`canopy__band canopy__band--${layer.edge}`}
+      style={{ height: `${layer.vh}vh`, opacity: layer.opacity }}
+      viewBox={`0 0 ${layer.w} ${layer.h}`}
+      preserveAspectRatio={layer.edge === 'bottom' ? 'xMidYMax slice' : 'xMidYMin slice'}
+    >
+      <path fill="currentColor" d={layerPath(layer)} />
+    </svg>
   );
 }
-
-// Canopy overhead: solid band across the top with fronds hanging into frame.
-function canopyBand({ w, h, seed, fronds }) {
-  const rand = prng(seed);
-  let d = `M0 0 L${w} 0 L${w} ${h * (0.18 + rand() * 0.1)} Z`;
-  const leaves = Array.from({ length: fronds }, (_, i) => {
-    const x = (i / fronds) * w + rand() * (w / fronds) * 0.7;
-    const len = h * (0.3 + rand() * 0.68);
-    const girth = len * (0.14 + rand() * 0.16);
-    const lean = (rand() - 0.5) * len * 0.7;
-    return leaf(x, h * (0.02 + rand() * 0.16), len, girth, lean);
-  });
-  return `${d} ${leaves.join(' ')}`;
-}
-
-const layers = [
-  // The far treeline is a wide low band; near foliage is a tall narrow band so
-  // the same element type gives both horizon and framing.
-  { name: 'far', kind: 'tree', w: 1600, h: 200, seed: 11, crowns: 26, trunks: 5, pos: 'bottom', opacity: 0.5 },
-  { name: 'far', kind: 'canopy', w: 1600, h: 150, seed: 23, fronds: 22, pos: 'top', opacity: 0.45 },
-  { name: 'mid', kind: 'tree', w: 1400, h: 300, seed: 37, crowns: 18, trunks: 8, pos: 'bottom', opacity: 0.78 },
-  { name: 'mid', kind: 'canopy', w: 1400, h: 240, seed: 51, fronds: 16, pos: 'top', opacity: 0.8 },
-  { name: 'near', kind: 'canopy', w: 1200, h: 340, seed: 67, fronds: 11, pos: 'top', opacity: 0.96 },
-  { name: 'front', kind: 'canopy', w: 1100, h: 420, seed: 83, fronds: 8, pos: 'bottom', opacity: 1 },
-];
 
 // The world is a jungle at night: foliage in depth bands, apes walking through
 // it, fog and grain over the lot. Nothing here is a section.
 export function WorldLayers() {
+  const inWorld = layers.filter((l) => l.z < 2);
+
   return (
     <>
       <div className="world-sky" aria-hidden="true">
         <div className="world-stars" />
       </div>
 
-      {['far', 'mid'].map((depth) => (
-        <div className={`canopy canopy--${depth}`} key={depth} aria-hidden="true">
-          {layers
-            .filter((l) => l.name === depth)
-            .map((l) => (
-              <svg
-                key={`${l.name}-${l.kind}`}
-                className={`canopy__band canopy__band--${l.pos}`}
-                viewBox={`0 0 ${l.w} ${l.h}`}
-                preserveAspectRatio={l.pos === 'bottom' ? 'xMidYMax slice' : 'xMidYMin slice'}
-                style={{ opacity: l.opacity }}
-              >
-                <path
-                  fill="currentColor"
-                  d={
-                    l.kind === 'tree'
-                      ? treeLine({ w: l.w, h: l.h, seed: l.seed, crowns: l.crowns, trunkCount: l.trunks })
-                      : canopyBand({ w: l.w, h: l.h, seed: l.seed, fronds: l.fronds })
-                  }
-                />
-              </svg>
+      {['far', 'mid', 'near', 'front'].map((depth) => {
+        const group = inWorld.filter((l) => l.cls === depth);
+        if (!group.length) return null;
+        return (
+          <div className={`canopy canopy--${depth}`} key={depth} aria-hidden="true">
+            {group.map((l) => (
+              <Band key={l.key} layer={l} />
             ))}
-        </div>
-      ))}
+          </div>
+        );
+      })}
 
       <RoamLayer />
-
-      <div className="canopy canopy--near" aria-hidden="true">
-        {layers
-          .filter((l) => l.name === 'near')
-          .map((l) => (
-            <svg
-              key={`${l.name}-${l.kind}`}
-              className={`canopy__band canopy__band--${l.pos}`}
-              viewBox={`0 0 ${l.w} ${l.h}`}
-              preserveAspectRatio="xMidYMin slice"
-            >
-              <path fill="currentColor" d={canopyBand({ w: l.w, h: l.h, seed: l.seed, fronds: l.fronds })} />
-            </svg>
-          ))}
-      </div>
 
       <div className="world-fog" aria-hidden="true" />
       <div className="world-grain" aria-hidden="true" />
@@ -134,18 +205,14 @@ export function WorldLayers() {
   );
 }
 
-// Foreground fronds sit above the content so the page reads as being watched
-// from behind the leaves. Only decorative, and only ever at the corners.
+// One large frond hanging in from the top-left corner, above the content, so
+// the page reads as being watched from behind the leaves. Kept to a single
+// shape: anything more covered the copy.
 export function ForegroundFronds() {
-  const l = layers.find((x) => x.name === 'front');
   return (
-    <div className="canopy canopy--front" aria-hidden="true">
-      <svg
-        className="canopy__band canopy__band--bottom"
-        viewBox={`0 0 ${l.w} ${l.h}`}
-        preserveAspectRatio="xMidYMax slice"
-      >
-        <path fill="currentColor" d={canopyBand({ w: l.w, h: l.h, seed: l.seed, fronds: l.fronds })} />
+    <div className="frond-frame" aria-hidden="true">
+      <svg viewBox="0 0 400 400" preserveAspectRatio="xMinYMin meet" className="frond-frame__svg">
+        <path fill="currentColor" d={frond(40, -30, 300, 62, 97, 12)} />
       </svg>
     </div>
   );

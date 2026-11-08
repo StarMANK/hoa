@@ -174,7 +174,7 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .section--dark {
-  background: #030405;
+  background: rgba(3, 4, 5, 0.72);
   color: var(--bone);
 }
 

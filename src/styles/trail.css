@@ -5,7 +5,10 @@
 .trail {
   position: relative;
   z-index: 2;
-  background: #030405;
+  /* Translucent, not opaque: the fixed roam layer lives on the world behind
+     every band, and an opaque ground here made the apes disappear for the
+     longest stretch of the page. */
+  background: rgba(3, 4, 5, 0.74);
   color: var(--bone);
   padding-block: clamp(4rem, 10vw, 8rem) clamp(5rem, 12vw, 9rem);
   overflow: hidden;
@@ -325,11 +328,11 @@
   display: grid;
   gap: 0.6rem;
   padding: clamp(1.3rem, 3vw, 2.2rem);
-  background: #030405;
+  background: rgba(3, 4, 5, 0.72);
   transition: background var(--dur) var(--ease-out);
 }
 
-.rule:hover { background: var(--night-3); }
+.rule:hover { background: rgba(19, 26, 28, 0.78); }
 
 .rule__num {
   font-family: var(--font-mono);
@@ -345,7 +348,7 @@
 .join {
   position: relative;
   z-index: 2;
-  background: #030405;
+  background: rgba(3, 4, 5, 0.72);
   color: var(--bone);
   overflow: hidden;
   isolation: isolate;
@@ -358,7 +361,7 @@
   background:
     radial-gradient(60% 70% at 78% 20%, rgba(252, 252, 252, 0.13), transparent 62%),
     radial-gradient(70% 80% at 12% 88%, rgba(252, 252, 252, 0.07), transparent 66%),
-    #030405;
+    transparent;
 }
 
 .join__bg::after {
