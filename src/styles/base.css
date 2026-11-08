@@ -170,7 +170,10 @@ img, svg { display: block; max-width: 100%; }
 .section {
   position: relative;
   z-index: 2;
-  padding-block: clamp(5rem, 12vw, 11rem);
+  /* Symmetric 12vw left a 173px dead tail under the last row of both content
+     bands at 1440. The head keeps the breathing room; the tail is tight because
+     the next band's own head provides the separation. */
+  padding-block: clamp(4rem, 9vw, 7.5rem) clamp(2.2rem, 3.5vw, 3rem);
 }
 
 .section--dark {

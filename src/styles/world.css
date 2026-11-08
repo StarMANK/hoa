@@ -522,7 +522,9 @@
   color: var(--white);
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - clamp(2rem, 7vw, 5.5rem)), 0 100%);
-  padding-bottom: clamp(4rem, 9vw, 7rem);
+  /* The diagonal clip needs some bottom room or the second row gets sheared,
+     but 9vw left 112px of empty band under the words. */
+  padding-bottom: clamp(2.4rem, 5vw, 3.6rem);
 }
 
 .seam__row {
@@ -565,13 +567,18 @@
 
   .hero {
     text-align: left;
-    padding-bottom: 5rem;
+    /* The chapter rail docks to the bottom edge on touch, so the hero needs
+       enough tail to clear it - the blurb was running straight under it. */
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
   }
   .hero__title .word--outline { text-align: left; }
 
   /* Touch users scroll by reflex, and the fixed chapter rail already anchors
      the bottom edge, so the hint is dead weight inside a short viewport. */
   .scroll-hint { display: none; }
+  /* Same reasoning: the blurb only restates "keep scrolling" on a fold that is
+     already the tallest thing on the page, and it landed under the rail. */
+  .hero__blurb { display: none; }
 
   .rail {
     top: auto;
@@ -587,9 +594,23 @@
   .rail a span:last-child { width: 0.9rem; }
   .rail a.is-active span:last-child { width: 1.4rem; }
 
-  /* The fold is already full on a phone; keep only the two lead walkers. */
-  .procession { gap: 0.8rem; padding-left: 1rem; bottom: 4rem; }
+  /* The fold is already full on a phone: keep the two lead walkers, drop them
+     below the CTAs, and dim them so they never fight the buttons for read. */
+  .procession {
+    gap: 0.8rem;
+    padding-left: 1rem;
+    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    opacity: 0.5;
+  }
   .procession__walker:nth-child(n + 3) { display: none; }
-  .procession__walker { width: calc(var(--h, 160px) * 0.52); }
-  .procession__walker { height: calc(var(--h, 160px) * 0.5); }
+  .procession__walker {
+    width: calc(var(--h, 160px) * 0.52);
+    height: calc(var(--h, 160px) * 0.5);
+  }
+
+  /* A 168px walker at 62% was landing behind the CTA stack on a 390px viewport.
+     Scale the near depth bands down and push them toward the bottom edge so the
+     copy always sits on clear ground. */
+  .roam__walker { opacity: calc(var(--fade, 0.4) * 0.55); }
+  .roam__walker:nth-child(n + 7) { display: none; }
 }
