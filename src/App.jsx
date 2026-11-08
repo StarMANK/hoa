@@ -9,7 +9,7 @@ import {
   join,
 } from './data/content.js';
 import { useActiveSection, usePointerVars, useReducedMotion, useRevealRoot, useScrollGlow } from './hooks/useMotion.js';
-import { EmberField, ScrollMeter, Seam, WallLayers } from './components/World.jsx';
+import { ForegroundFronds, ScrollMeter, Seam, WorldLayers } from './components/World.jsx';
 import { DataBand, Footer, Genres, Hero, Join, Rail, Rules, Trail } from './components/Sections.jsx';
 
 const navItems = [{ id: 'home', nav: 'HOME' }, ...chapters.map((c) => ({ id: c.id, nav: c.nav }))];
@@ -72,8 +72,7 @@ export default function App() {
         Lewati ke origin trail
       </a>
 
-      <WallLayers />
-      <EmberField />
+      <WorldLayers />
       <div className="cursor-flare" aria-hidden="true" />
       <ScrollMeter />
 
@@ -87,6 +86,8 @@ export default function App() {
       <Rules />
       <Join join={join} discord={discordUrl} />
       <Footer footer={footer} />
+
+      <ForegroundFronds />
 
       <p className="sr-only">
         Hall Of Apes dulunya BLG, {brand.predecessorLong}. Simbol lama: gorilla,

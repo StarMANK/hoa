@@ -1,6 +1,7 @@
 import { useCountUp } from '../hooks/useMotion.js';
 import { genres, rules, stats, symbols } from '../data/content.js';
 import { ArrowGlyph, DiscordGlyph, Glyph, PrimitiveArt } from './Marks.jsx';
+import { Procession } from './Apes.jsx';
 import { HollowWords, KineticTitle } from './World.jsx';
 
 export function Rail({ items, active, onNavigate }) {
@@ -61,6 +62,9 @@ export function Hero({ discord, hero, brand, logoUrl }) {
           </p>
         </div>
       </div>
+
+      {/* The subject, not decoration: the kawanan walking across the fold. */}
+      <Procession />
     </section>
   );
 }

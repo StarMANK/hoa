@@ -1,27 +1,34 @@
 /* Hall Of Apes design tokens.
    Palette sources:
-   #fcfcfc  sampled from hoa_logo.png (all opaque pixels read #fcfcfc)
-   #0b0b0c  derived: negative space of that same artwork, used for rock plates
-   #f3f0e7  derived: warm bone from the repo's existing --bone #f2f0e8
-   #e63b10  derived: the ember hue already used by the fire motion (#ff5a00), pushed to poster saturation
-   #c9f04a  derived: acid chisel highlight, used only for data marks and active states */
+   #fcfcfc  sampled from hoa_logo.png (every 100% opaque pixel reads #fcfcfc)
+   #060809  derived: the night the logo floats on, pushed a shade cool for depth
+   #f3f0e7  derived: warm bone, secondary text on the night bands
+   The logo carries no hue at all, so the accent is the logo itself: bone white.
+   Colour comes from depth (canopy layers fading to black), never from a hue. */
 :root {
+  --night: #060809;
+  --night-2: #0b0f11;
+  --night-3: #131a1c;
+  --night-4: #1d2628;
+  --canopy: #070b09;
+
   --ink: #0b0b0c;
   --ink-2: #16161a;
   --ink-3: #23232a;
   --bone: #f3f0e7;
   --bone-2: #e7e2d4;
   --bone-3: #d5cfbe;
-  --ember: #e63b10;
-  --ember-hot: #ff7a21;
-  --ember-deep: #8f2205;
-  --acid: #c9f04a;
   --white: #fcfcfc;
 
-  --wall: var(--bone);
-  --on-wall: var(--ink);
-  --rule: rgba(11, 11, 12, 0.18);
-  --rule-dark: rgba(243, 240, 231, 0.18);
+  /* The single accent. Sampled straight off the logo. */
+  --accent: #fcfcfc;
+  --accent-dim: rgba(252, 252, 252, 0.62);
+  --accent-faint: rgba(252, 252, 252, 0.22);
+
+  --wall: var(--night);
+  --on-wall: var(--bone);
+  --rule: rgba(252, 252, 252, 0.16);
+  --rule-dark: rgba(252, 252, 252, 0.18);
 
   --font-display: Anton, 'Archivo Black', Impact, sans-serif;
   --font-body: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;

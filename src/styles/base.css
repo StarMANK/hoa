@@ -22,7 +22,7 @@ button { font: inherit; color: inherit; }
 img, svg { display: block; max-width: 100%; }
 
 :focus-visible {
-  outline: 3px solid var(--ember);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -73,25 +73,28 @@ img, svg { display: block; max-width: 100%; }
 
 .body-copy { max-width: 56ch; }
 
-.ember-word { color: var(--ember); }
-.tag-ember {
+/* One word per heading gets the solid accent, nothing more. */
+.accent-word { color: var(--accent); }
+.tag-accent {
   display: inline-block;
   padding: 0 0.08em;
-  background: var(--ember);
-  color: var(--bone);
+  background: var(--accent);
+  color: var(--night);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
 }
 
+/* Buttons invert against the night world: the page is dark, so the primary
+   action has to be the brightest thing on screen. */
 .cta {
   position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   padding: 1.05rem 1.5rem;
-  border: 2px solid var(--ink);
-  background: var(--ink);
-  color: var(--bone);
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--night);
   font-family: var(--font-mono);
   font-size: var(--step-micro);
   font-weight: 700;
@@ -108,7 +111,7 @@ img, svg { display: block; max-width: 100%; }
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--ember);
+  background: var(--night);
   transform: translateY(101%);
   transition: transform var(--dur) var(--ease-snap);
 }
@@ -116,13 +119,13 @@ img, svg { display: block; max-width: 100%; }
 .cta:hover,
 .cta:focus-visible {
   color: var(--white);
-  border-color: var(--ember);
+  border-color: var(--accent);
 }
 
 /* The sweep alone is not enough contrast on every background, so keyboard
    focus keeps its own ring. */
 .cta:focus-visible {
-  outline: 3px solid var(--ember);
+  outline: 3px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -133,12 +136,14 @@ img, svg { display: block; max-width: 100%; }
 
 .cta--ghost {
   background: transparent;
-  color: var(--ink);
-  border-color: var(--ink);
+  color: var(--white);
+  border-color: rgba(252, 252, 252, 0.45);
 }
 
+.cta--ghost::before { background: var(--accent); }
+
 .cta--ghost:hover,
-.cta--ghost:focus-visible { color: var(--bone); border-color: var(--ember); }
+.cta--ghost:focus-visible { color: var(--night); border-color: var(--accent); }
 
 .cta--onDark { border-color: var(--bone); color: var(--bone); background: transparent; }
 .cta--onDark::before { background: var(--bone); }
@@ -151,7 +156,7 @@ img, svg { display: block; max-width: 100%; }
   display: flex;
   align-items: center;
   gap: 1rem;
-  color: var(--ember);
+  color: var(--accent);
 }
 
 .band-label::after {
@@ -169,7 +174,7 @@ img, svg { display: block; max-width: 100%; }
 }
 
 .section--dark {
-  background: var(--ink);
+  background: #030405;
   color: var(--bone);
 }
 

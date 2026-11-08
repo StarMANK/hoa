@@ -1,84 +1,108 @@
-/* The world: one continuous wall with a dark cave carved into it.
-   Background motion language: giant outline glyphs rotating slowly, alive
-   grain, a light sweep tied to scroll, rising embers. Signature motion:
-   chisel wipes and strokes that carve themselves. */
+/* The world: a jungle at night. Depth does all the work - the logo is pure
+   #fcfcfc on nothing, so colour never comes from a hue, only from how far away
+   something is. Far layers sink toward the night, near layers are cut close to
+   black, and the apes walk through it as the one persistent subject.
+
+   Stack (back to front):
+   void  ->  treeline  ->  canopy far  ->  roam (apes)  ->  canopy near
+   ->  fog  ->  grain  ->  content  ->  foreground fronds */
 
 .world {
   position: relative;
   min-height: 100vh;
   isolation: isolate;
   overflow-x: clip;
+  background: var(--night);
 }
 
-.wall-surface,
-.wall-glyphs,
-.wall-grain,
-.wall-sweep,
-.wall-grid {
+.world-sky,
+.canopy,
+.world-fog,
+.world-grain,
+.world-sweep,
+.roam {
   position: fixed;
   inset: 0;
   pointer-events: none;
 }
 
-.wall-surface {
-  z-index: -4;
+/* Night itself: a low horizon glow, no hue to hang it on. */
+.world-sky {
+  z-index: -6;
   background:
-    radial-gradient(120% 90% at 12% 0%, #fffdf8 0%, transparent 55%),
-    radial-gradient(90% 80% at 92% 18%, rgba(230, 59, 16, 0.13) 0%, transparent 58%),
-    radial-gradient(110% 90% at 45% 112%, rgba(143, 34, 5, 0.18) 0%, transparent 60%),
-    linear-gradient(168deg, #faf7f0, var(--bone) 42%, var(--bone-2) 100%);
+    radial-gradient(60% 32% at 62% 8%, rgba(252, 252, 252, 0.09) 0%, transparent 62%),
+    radial-gradient(90% 46% at 50% 102%, rgba(252, 252, 252, 0.07) 0%, transparent 68%),
+    linear-gradient(180deg, #040506 0%, var(--night) 44%, var(--night-2) 78%, #040506 100%);
 }
 
-.wall-grid {
-  z-index: -3;
+.world-stars {
+  position: absolute;
+  inset: 0 0 45% 0;
   opacity: 0.5;
-  background:
-    repeating-linear-gradient(90deg, transparent 0 7rem, var(--rule) 7rem 7.04rem),
-    repeating-linear-gradient(0deg, transparent 0 7rem, var(--rule) 7rem 7.04rem);
-  mask-image: radial-gradient(85% 70% at 50% 30%, #000 0%, transparent 78%);
-  transform: translate3d(calc(var(--px) * -1.6rem), calc(var(--py) * -1.6rem), 0);
-  transition: transform 1.2s var(--ease-out);
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(252, 252, 252, 0.8) 50%, transparent 51%),
+    radial-gradient(1px 1px at 28% 9%, rgba(252, 252, 252, 0.6) 50%, transparent 51%),
+    radial-gradient(1px 1px at 41% 24%, rgba(252, 252, 252, 0.5) 50%, transparent 51%),
+    radial-gradient(1px 1px at 57% 12%, rgba(252, 252, 252, 0.7) 50%, transparent 51%),
+    radial-gradient(1px 1px at 71% 27%, rgba(252, 252, 252, 0.45) 50%, transparent 51%),
+    radial-gradient(1px 1px at 83% 15%, rgba(252, 252, 252, 0.65) 50%, transparent 51%),
+    radial-gradient(1px 1px at 92% 30%, rgba(252, 252, 252, 0.4) 50%, transparent 51%);
 }
 
-.wall-glyphs {
-  z-index: -2;
+/* Foliage layers. Each is a wide SVG band pinned to an edge; the depth trick is
+   size and contrast, not colour. */
+.canopy {
   overflow: hidden;
 }
 
-.wall-glyph {
+.canopy__band {
   position: absolute;
-  color: rgba(11, 11, 12, 0.12);
-  transform: translate3d(calc(var(--px) * var(--depth, 1rem)), calc(var(--py) * var(--depth, 1rem)), 0);
-  transition: transform 1.6s var(--ease-out);
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--canopy);
   will-change: transform;
 }
 
-.wall-glyph--hero {
-  width: min(78vw, 60rem);
-  top: -12vh;
-  right: -16vw;
-  animation: glyph-drift 44s linear infinite;
-}
-.wall-glyph .glyph { width: 100%; height: auto; }
+.canopy--far { z-index: -5; }
+.canopy--mid { z-index: -4; }
+.canopy--near { z-index: 1; }
+.canopy--front { z-index: 9; }
 
-.wall-glyph--mid {
-  width: min(58vw, 44rem);
-  bottom: -18vh;
-  left: -14vw;
-  color: rgba(230, 59, 16, 0.16);
-  animation: glyph-drift 62s linear infinite reverse;
+.canopy--far .canopy__band--top { opacity: 0.55; transform: translate3d(calc(var(--px) * -0.6rem), 0, 0); }
+.canopy--far .canopy__band--bottom { opacity: 0.5; transform: translate3d(calc(var(--px) * -0.6rem), 0, 0); }
+.canopy--mid .canopy__band--top { opacity: 0.8; transform: translate3d(calc(var(--px) * -1.4rem), 0, 0); }
+.canopy--mid .canopy__band--bottom { opacity: 0.75; transform: translate3d(calc(var(--px) * -1.4rem), 0, 0); }
+
+.canopy__band--top { top: 0; }
+.canopy__band--bottom { bottom: 0; }
+
+/* Near foliage is the darkest thing on screen and swings hardest with the
+   pointer, which is what makes the depth read. */
+.canopy--near .canopy__band--top { color: #040605; opacity: 0.95; transform: translate3d(calc(var(--px) * -3.2rem), 0, 0); }
+.canopy--front .canopy__band--bottom { color: #020302; transform: translate3d(calc(var(--px) * 4.4rem), 0, 0); }
+
+.canopy__band { transition: transform 1.4s var(--ease-out); }
+
+/* Ground haze sitting over the treeline base. */
+.world-fog {
+  z-index: 2;
+  background:
+    linear-gradient(180deg, transparent 0%, transparent 62%, rgba(180, 200, 195, 0.05) 82%, transparent 100%),
+    radial-gradient(70% 22% at 30% 96%, rgba(252, 252, 252, 0.06), transparent 70%);
+  animation: fog-drift 46s linear infinite;
 }
 
-@keyframes glyph-drift {
-  0% { transform: rotate(-6deg) scale(1); }
-  50% { transform: rotate(6deg) scale(1.07); }
-  100% { transform: rotate(-6deg) scale(1); }
+@keyframes fog-drift {
+  0% { transform: translate3d(-2%, 0, 0); }
+  50% { transform: translate3d(2%, -0.6%, 0); }
+  100% { transform: translate3d(-2%, 0, 0); }
 }
 
-.wall-grain {
-  z-index: -1;
-  opacity: 0.42;
-  mix-blend-mode: multiply;
+.world-grain {
+  z-index: 3;
+  opacity: 0.3;
+  mix-blend-mode: screen;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.36'/%3E%3C/svg%3E");
   animation: grain-shift 0.7s steps(4) infinite;
 }
@@ -91,43 +115,73 @@
   100% { transform: translate3d(0, 0, 0); }
 }
 
-.wall-sweep {
-  z-index: -1;
+/* A moonlit sweep tied to scroll instead of a fire glow. */
+.world-sweep {
+  z-index: 3;
   background: linear-gradient(
     104deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.55) 46%,
-    rgba(255, 243, 231, 0.75) 50%,
+    rgba(252, 252, 252, 0.05) 46%,
+    rgba(252, 252, 252, 0.09) 50%,
     transparent 62%
   );
-  opacity: calc(0.14 + var(--scroll-glow) * 0.5);
+  opacity: calc(0.3 + var(--scroll-glow) * 0.7);
   transform: translate3d(calc(var(--scroll-progress) * 62% - 31%), 0, 0);
 }
 
-.ember-field {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  pointer-events: none;
+/* The apes. Bone-white cut-outs on the night, exactly as in the reference. */
+.roam {
+  z-index: 0;
   overflow: hidden;
   contain: strict;
 }
 
-.ember {
+.roam__walker {
   position: absolute;
-  bottom: -8vh;
-  border-radius: 50%;
-  background: radial-gradient(circle at 40% 35%, var(--white) 0%, var(--ember-hot) 30%, var(--ember) 55%, transparent 78%);
-  box-shadow: 0 0 0.9rem rgba(230, 59, 16, 0.75);
-  animation: ember-rise var(--dur-ember, 9s) linear infinite;
-  animation-delay: var(--delay, 0s);
+  top: var(--top, 70%);
+  left: 0;
+  width: var(--w, 60px);
+  color: var(--accent);
+  opacity: var(--fade, 0.4);
+  animation: roam-cross var(--dur-roam, 120s) linear infinite;
+  animation-delay: var(--delay-roam, 0s);
+  will-change: transform;
 }
 
-@keyframes ember-rise {
-  0% { transform: translate3d(0, 0, 0) scale(0.6); opacity: 0; }
-  12% { opacity: 0.95; }
-  70% { opacity: 0.55; }
-  100% { transform: translate3d(var(--drift, 3rem), -112vh, 0) scale(1.25); opacity: 0; }
+/* Walkers facing left get the whole track mirrored, so they still enter from
+   the correct edge instead of moonwalking backwards. */
+.roam__walker--dirl {
+  animation-name: roam-cross-l;
+}
+
+.roam__bob {
+  display: block;
+  animation: walk-bob var(--dur-step, 1.15s) ease-in-out infinite;
+  animation-delay: var(--delay-roam, 0s);
+  transform-origin: 50% 100%;
+}
+
+.roam__walker--dirl .roam__bob { transform: scaleX(-1); }
+
+.roam__bob .ape { width: 100%; height: auto; }
+
+@keyframes roam-cross {
+  0% { transform: translate3d(-25vw, 0, 0); }
+  100% { transform: translate3d(125vw, 0, 0); }
+}
+
+@keyframes roam-cross-l {
+  0% { transform: translate3d(125vw, 0, 0); }
+  100% { transform: translate3d(-25vw, 0, 0); }
+}
+
+/* The step: a body bob plus a lean that reverses at each footfall, so a static
+   silhouette still reads as mid-stride when the animation is paused. */
+@keyframes walk-bob {
+  0%, 100% { translate: 0 0; rotate: -1.2deg; }
+  25% { translate: 0 calc(var(--bob, 1px) * -1); rotate: 0deg; }
+  50% { translate: 0 0; rotate: 1.2deg; }
+  75% { translate: 0 calc(var(--bob, 1px) * -1); rotate: 0deg; }
 }
 
 .cursor-flare {
@@ -136,7 +190,7 @@
   z-index: 6;
   pointer-events: none;
   opacity: 0;
-  background: radial-gradient(20rem 20rem at var(--gx) var(--gy), rgba(255, 122, 33, 0.14) 0%, rgba(230, 59, 16, 0.07) 42%, transparent 70%);
+  background: radial-gradient(22rem 22rem at var(--gx) var(--gy), rgba(252, 252, 252, 0.07) 0%, rgba(252, 252, 252, 0.03) 42%, transparent 70%);
   transition: opacity var(--dur) var(--ease-out);
 }
 
@@ -149,13 +203,13 @@
   right: 0;
   height: 3px;
   z-index: 30;
-  background: var(--rule);
+  background: rgba(252, 252, 252, 0.1);
   pointer-events: none;
 }
 
 .scroll-meter__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--ember-deep), var(--ember), var(--ember-hot));
+  background: linear-gradient(90deg, rgba(252, 252, 252, 0.35), var(--accent));
   transform: scaleX(var(--scroll-progress));
   transform-origin: left;
 }
@@ -169,11 +223,11 @@
   display: grid;
   gap: 0.35rem;
   padding: 0.6rem 0.5rem;
-  background: rgba(243, 240, 231, 0.92);
-  color: var(--ink);
+  background: rgba(6, 8, 9, 0.82);
+  color: var(--bone);
   backdrop-filter: blur(6px);
-  border: 1px solid rgba(11, 11, 12, 0.22);
-  box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(252, 252, 252, 0.22);
+  box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.5);
   transform: translateY(-50%);
 }
 
@@ -188,7 +242,7 @@
   font-family: var(--font-mono);
   font-size: 0.62rem;
   letter-spacing: 0.14em;
-  color: rgba(11, 11, 12, 0.55);
+  color: rgba(252, 252, 252, 0.5);
   transition: color var(--dur-fast) var(--ease-out);
 }
 
@@ -200,21 +254,20 @@
   transition: width var(--dur) var(--ease-snap), background var(--dur-fast);
 }
 
-.rail a:hover { color: var(--ink); }
+.rail a:hover { color: var(--white); }
 
-/* Rail links sit on the light plate, so the ember ring would vanish there. */
 .rail a:focus-visible {
-  color: var(--ink);
-  outline: 3px solid var(--ink);
+  color: var(--white);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
 }
 
-.rail a.is-active { color: var(--ember-hot); }
+.rail a.is-active { color: var(--white); }
 
 .rail a.is-active span:last-child {
   width: 2.6rem;
-  background: var(--ember);
-  box-shadow: 0 0 0.7rem rgba(230, 59, 16, 0.9);
+  background: var(--accent);
+  box-shadow: 0 0 0.7rem rgba(252, 252, 252, 0.55);
 }
 
 /* Hero */
@@ -232,11 +285,16 @@
 .hero__plate {
   position: absolute;
   z-index: -1;
-  top: 44%;
+  top: 42%;
   right: clamp(7.5rem, 11vw, 10.5rem);
   width: min(40vw, 27rem);
   aspect-ratio: 1;
-  background: linear-gradient(152deg, var(--ink-3) 0%, var(--ink) 52%, #050506 100%);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(60% 60% at 50% 42%, rgba(252, 252, 252, 0.07) 0%, transparent 70%),
+    linear-gradient(152deg, rgba(252, 252, 252, 0.06) 0%, transparent 40%);
+  border: 1px solid rgba(252, 252, 252, 0.14);
   clip-path: polygon(13% 4%, 47% 0%, 79% 7%, 97% 31%, 89% 63%, 94% 86%, 62% 100%, 27% 95%, 6% 82%, 0% 44%, 4% 20%);
   transform: perspective(1200px)
     translate3d(calc(var(--px) * 2.4rem), calc(-50% + var(--py) * 2rem), 0)
@@ -249,7 +307,7 @@
   content: '';
   position: absolute;
   inset: -40%;
-  background: linear-gradient(76deg, transparent 42%, rgba(243, 240, 231, 0.13) 50%, transparent 58%);
+  background: linear-gradient(76deg, transparent 42%, rgba(252, 252, 252, 0.13) 50%, transparent 58%);
   transform: translate3d(calc(var(--scroll-progress) * -60%), 0, 0);
 }
 
@@ -262,7 +320,7 @@
   max-height: 62%;
   margin: auto;
   object-fit: contain;
-  filter: drop-shadow(0 1.4rem 2.2rem rgba(0, 0, 0, 0.85));
+  filter: drop-shadow(0 0 3rem rgba(252, 252, 252, 0.22));
   animation: logo-carve 1.5s var(--ease-out) both;
 }
 
@@ -276,14 +334,15 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 0.8rem;
-  color: var(--ember);
+  color: var(--accent);
 }
 
 .hero__kicker .dot {
   width: 0.5rem;
   height: 0.5rem;
-  background: var(--ember);
+  background: var(--accent);
   border-radius: 50%;
+  box-shadow: 0 0 0.8rem rgba(252, 252, 252, 0.6);
   animation: pulse 2.4s var(--ease-out) infinite;
 }
 
@@ -296,6 +355,8 @@
   font-size: var(--step-hero);
   letter-spacing: -0.03em;
   margin: 0;
+  color: var(--white);
+  text-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.75);
 }
 
 .hero__title .word {
@@ -318,7 +379,7 @@
 
 .hero__title .word--outline {
   color: transparent;
-  -webkit-text-stroke: 2px var(--ink);
+  -webkit-text-stroke: 2px rgba(252, 252, 252, 0.72);
   text-align: right;
 }
 
@@ -327,17 +388,19 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.9rem;
-  border: 2px solid var(--ink);
-  background: var(--white);
+  border: 2px solid var(--accent);
+  background: rgba(6, 8, 9, 0.6);
+  color: var(--white);
   font-family: var(--font-mono);
   font-size: clamp(0.8rem, 1.4vw, 1.05rem);
   font-weight: 700;
   letter-spacing: 0.1em;
   width: max-content;
   transform: rotate(-1.1deg);
+  backdrop-filter: blur(3px);
 }
 
-.hero__path b { color: var(--ember); }
+.hero__path b { color: var(--accent-dim); }
 
 .hero__foot {
   display: grid;
@@ -346,14 +409,16 @@
 }
 
 .hero__stack {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: clamp(0.8rem, 1.6vw, 1.1rem);
   justify-items: start;
 }
 
-.hero__blurb { color: rgba(11, 11, 12, 0.68); }
+.hero__blurb { color: rgba(243, 240, 231, 0.72); }
 
-.hero__tagline { color: rgba(11, 11, 12, 0.7); }
+.hero__tagline { color: rgba(243, 240, 231, 0.74); }
 
 .hero__actions {
   display: flex;
@@ -366,7 +431,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  color: var(--ember);
+  color: var(--accent-dim);
   font-family: var(--font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.2em;
@@ -385,15 +450,49 @@
   50% { transform: translate3d(0, 6px, 0); }
 }
 
-/* Marquee band, the seam between wall and cave */
+/* The hero procession: the reference image restated as the page's subject.
+   Sizes step down left to right and each walker drifts forward at a different
+   rate, so the line never sits still but never leaves the fold either. */
+.procession {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: clamp(1rem, 4vh, 3rem);
+  z-index: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(0.5rem, 2.4vw, 2.6rem);
+  padding-left: clamp(1rem, 6vw, 5rem);
+  pointer-events: none;
+  mask-image: linear-gradient(90deg, #000 0%, #000 62%, transparent 96%);
+}
+
+.procession__walker {
+  display: block;
+  width: calc(var(--h, 160px) * 1.03);
+  color: var(--accent);
+  opacity: var(--fade, 0.6);
+  animation: proc-trudge 9s ease-in-out infinite;
+  animation-delay: var(--delay-proc, 0s);
+}
+
+.procession__bob { display: block; transform-origin: 50% 100%; animation: walk-bob 1.15s ease-in-out infinite; animation-delay: var(--delay-proc, 0s); }
+.procession__bob .ape { width: 100%; height: auto; }
+
+@keyframes proc-trudge {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(1.4rem, 0, 0); }
+}
+
+/* Marquee band, lit from inside rather than painted. */
 .seam {
   position: relative;
   z-index: 3;
   display: grid;
   gap: 0.4rem;
   padding-block: clamp(1.4rem, 4vw, 2.6rem);
-  background: var(--ink);
-  color: var(--bone);
+  background: linear-gradient(180deg, rgba(252, 252, 252, 0.04), transparent 70%), #030405;
+  color: var(--white);
   overflow: hidden;
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - clamp(2rem, 7vw, 5.5rem)), 0 100%);
   padding-bottom: clamp(4rem, 9vw, 7rem);
@@ -414,11 +513,11 @@
   padding-right: 0.6em;
 }
 
-.seam__row--a { animation: marquee 34s linear infinite; color: var(--bone); }
+.seam__row--a { animation: marquee 34s linear infinite; color: var(--white); }
 .seam__row--b {
   animation: marquee 34s linear infinite reverse;
   color: transparent;
-  -webkit-text-stroke: 1.5px var(--ember);
+  -webkit-text-stroke: 1.5px rgba(252, 252, 252, 0.55);
 }
 
 @keyframes marquee {
@@ -460,4 +559,10 @@
   .rail a { grid-auto-flow: row; gap: 0.2rem; font-size: 0.5rem; }
   .rail a span:last-child { width: 0.9rem; }
   .rail a.is-active span:last-child { width: 1.4rem; }
+
+  /* The fold is already full on a phone; keep only the two lead walkers. */
+  .procession { gap: 0.8rem; padding-left: 1rem; bottom: 4rem; }
+  .procession__walker:nth-child(n + 3) { display: none; }
+  .procession__walker { width: calc(var(--h, 160px) * 0.52); }
+  .procession__walker { height: calc(var(--h, 160px) * 0.5); }
 }

@@ -32,13 +32,14 @@ const poses = {
     trunkWidth: 30,
   },
   carry: {
-    // Hunched marcher with a spear laid across the shoulder.
+    // Hunched marcher with a spear laid across the shoulder. The head sits high
+    // and forward so the shaft reads behind it instead of swallowing it.
     spine: [[44, 84], [52, 62], [66, 46]],
-    head: { x: 70, cy: 40, y: 38, s: 46, rot: 22 },
-    spear: [[34, 10], [114, 56]],
+    head: { x: 74, cy: 34, y: 34, s: 48, rot: 14 },
+    spear: [[30, 20], [112, 62]],
     legNear: { hip: [50, 86], knee: [70, 102], ankle: [72, 116], toe: [86, 120] },
     legFar: { hip: [42, 86], knee: [32, 104], ankle: [28, 116], toe: [16, 120] },
-    armNear: { sh: [68, 48], elbow: [84, 46], wrist: [98, 46] },
+    armNear: { sh: [68, 50], elbow: [86, 52], wrist: [100, 56] },
     armFar: { sh: [58, 52], elbow: [50, 68], wrist: [50, 84] },
     trunkWidth: 30,
   },
@@ -53,15 +54,16 @@ const poses = {
     trunkWidth: 30,
   },
   forage: {
-    // Low scavenger at the tail of the line, digging with a stick.
-    spine: [[36, 92], [50, 80], [70, 74]],
-    head: { x: 76, cy: 74, y: 74, s: 40, rot: 62 },
-    stick: [[94, 98], [118, 92]],
+    // Low scavenger at the tail of the line, digging with a stick. Only used
+    // small, where its silhouette is legible.
+    spine: [[36, 92], [50, 82], [68, 78]],
+    head: { x: 74, cy: 78, y: 78, s: 40, rot: 58 },
+    stick: [[92, 100], [118, 94]],
     legNear: { hip: [42, 94], knee: [56, 108], ankle: [60, 118], toe: [72, 122] },
     legFar: { hip: [34, 94], knee: [28, 108], ankle: [24, 118], toe: [12, 122] },
-    armNear: { sh: [72, 76], elbow: [84, 90], wrist: [94, 98] },
-    armFar: { sh: [62, 78], elbow: [62, 96], wrist: [58, 112] },
-    trunkWidth: 26,
+    armNear: { sh: [70, 80], elbow: [82, 92], wrist: [92, 100] },
+    armFar: { sh: [62, 80], elbow: [62, 96], wrist: [58, 112] },
+    trunkWidth: 24,
   },
 };
 
