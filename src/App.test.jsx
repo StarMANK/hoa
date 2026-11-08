@@ -299,3 +299,143 @@ describe('palette integrity', () => {
     expect(orphans.map((o) => `${o.file} ${o.selector}`)).toEqual([]);
   });
 });
+
+// World depth order, asserted from the stylesheet.
+//
+// This is the invariant every ape measurement rests on. The apes are the subject, and
+// being the subject depends on where they sit: the far and mid canopy must stay behind
+// them or the scenery paints over the subject, the front fern and near canopy must stay
+// in front of them or the depth cue that makes them look like they are walking *into* the
+// jungle disappears, and the content bands must stay above them or copy lands on top of
+// moving shapes. Get any pair of those the wrong way round and nothing visibly breaks in
+// a unit test, because jsdom does not paint. It only shows up as apes that have stopped
+// being apes, which is the defect class this whole branch has been chasing.
+//
+// Read as text rather than through the DOM for the same reason the palette tests above do
+// it: computed style under jsdom answers every z-index with the initial value.
+describe('world depth order', () => {
+  const readStyle = (f) =>
+    readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'styles', f), 'utf8').replace(
+      /\/\*[\s\S]*?\*\//g,
+      '',
+    );
+
+  // z-index of every rule whose selector list contains this selector exactly. Pseudo
+  // elements are ignored, so `.rail::after` counts as `.rail`. Anything stricter or
+  // looser is wrong here: matching on substring makes `.join__bg` look like `.join`, and
+  // .join__bg is deliberately at -1 *inside* .join's stacking context, which is not the
+  // same question and would have failed this test for a correct rule.
+  const zIndexOf = (text, selector) => {
+    const found = [];
+    for (const m of text.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
+      const [_, sel, body] = m;
+      const parts = sel
+        .split(',')
+        .map((s) => s.trim().replace(/::?[a-z-]+(\([^)]*\))?$/, '').trim())
+        .filter(Boolean);
+      if (!parts.includes(selector)) continue;
+      for (const z of body.matchAll(/z-index:\s*(-?\d+)/g)) found.push(Number(z[1]));
+    }
+    return found;
+  };
+
+  const world = readStyle('world.css');
+  const trail = readStyle('trail.css');
+  const base = readStyle('base.css');
+
+  // Back to front. Each entry is one element that must stay strictly behind the next.
+  const LAYERS = [
+    { file: () => world, selector: '.canopy--far', why: 'distant treeline' },
+    { file: () => world, selector: '.canopy--mid', why: 'mid canopy' },
+    { file: () => world, selector: '.roam', why: 'the walking apes' },
+    { file: () => world, selector: '.canopy--front', why: 'ground fern in front of the apes' },
+  ];
+
+  const depth = LAYERS.map((l) => {
+    const zs = zIndexOf(l.file(), l.selector);
+    // Ambiguous beats wrong: two different values for the same element means the
+    // cascade decides by source order, which is not an invariant anyone can read.
+    expect(zs.length, `${l.selector} has no z-index declared`).toBeGreaterThan(0);
+    expect(new Set(zs), `${l.selector} declares conflicting z-index values`).toEqual(new Set([zs[0]]));
+    return { selector: l.selector, why: l.why, z: zs[0] };
+  });
+
+  it('keeps the far and mid canopy behind the apes', () => {
+    const apes = depth.find((d) => d.selector === '.roam');
+    const behind = depth.filter((d) => /canopy--(far|mid)/.test(d.selector));
+    const over = behind.filter((d) => d.z >= apes.z);
+    expect(over.map((d) => `${d.selector} z${d.z} >= .roam z${apes.z}`), 'scenery would paint over the subject').toEqual([]);
+  });
+
+  it('keeps the ground fern in front of the apes so they have depth', () => {
+    const apes = depth.find((d) => d.selector === '.roam');
+    const fern = depth.find((d) => d.selector === '.canopy--front');
+    // Without this the apes are flat decals on the background. It is also the layer the
+    // lead walker is now stood on rather than inside, so if the fern ever drops below the
+    // apes the framing that makes 3.46:1 acceptable goes with it.
+    expect(fern.z, `.canopy--front z${fern.z} must be above .roam z${apes.z}`).toBeGreaterThan(apes.z);
+  });
+
+  it('keeps the content bands above the apes they are measured against', () => {
+    // bandtext.mjs attributes ape erasure to these panels' washes and card fills. That
+    // attribution, and every number it produced, assumes the panels paint after the roam
+    // layer. If a band moved behind, the probe would still pass on the same numbers while
+    // describing a page that no longer exists.
+    const apes = zIndexOf(world, '.roam')[0];
+    const bands = ['.trail', '.data', '.join', '.foot'];
+    const below = bands
+      .map((sel) => ({ sel, zs: [...zIndexOf(trail, sel), ...zIndexOf(base, sel)] }))
+      .filter((b) => b.zs.length && Math.min(...b.zs) <= apes)
+      .map((b) => `${b.sel} z${Math.min(...b.zs)} <= .roam z${apes}`);
+    expect(below).toEqual([]);
+  });
+});
+
+// An ember palette is a hue, and this page has exactly one accent: the logo white.
+//
+// scripts/huecheck.mjs proves no hue reaches the *pixels* at three desktop scroll depths,
+// with a 200x200 block of #e8622a as a positive control so the probe cannot pass by being
+// blind. That is the stronger claim but it is runtime-only and desktop-only, and it cannot
+// tell you which file reintroduced the colour. This is the cheap static half: no orange
+// literal anywhere in the stylesheet, so an ember value has to be added deliberately
+// rather than arriving with a merge.
+describe('no ember literals in the stylesheet', () => {
+  const files = ['tokens.css', 'base.css', 'index.css', 'trail.css', 'world.css'];
+  const texts = Object.fromEntries(
+    files.map((f) => [
+      f,
+      readFileSync(join(dirname(fileURLToPath(import.meta.url)), 'styles', f), 'utf8').replace(
+        /\/\*[\s\S]*?\*\//g,
+        '',
+      ),
+    ]),
+  );
+
+  // Same threshold huecheck.mjs uses, and for the same reason: absolute channel spread,
+  // not a ratio. The night ramp sits at 4-6 code values of spread and reads as grey; the
+  // old ember accent measures 190 and still around 40 once antialiased to a fifth of its
+  // area. Anything above 40 here is a colour, not dither.
+  const spread = (r, g, b) => Math.max(r, g, b) - Math.min(r, g, b);
+  const offenders = [];
+  for (const [file, text] of Object.entries(texts)) {
+    for (const m of text.matchAll(/#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})\b/gi)) {
+      const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h, 16));
+      if (spread(r, g, b) > 40) offenders.push(`${file}: ${m[0]}`);
+    }
+    // Only after the long form has been consumed, and only for a real 3-digit colour:
+    // expanding a 6-digit literal's first three characters and doubling them turns
+    // #f3f0e7 into #f3f, which is 204 apart and flags the night palette as ember.
+    for (const m of text.matchAll(/#([0-9a-f])([0-9a-f])([0-9a-f])(?!([0-9a-f]{3}))\b/gi)) {
+      const [r, g, b] = [m[1], m[2], m[3]].map((h) => parseInt(h + h, 16));
+      if (spread(r, g, b) > 40) offenders.push(`${file}: ${m[0]}`);
+    }
+    for (const m of text.matchAll(/rgba?\((\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/g)) {
+      if (spread(Number(m[1]), Number(m[2]), Number(m[3])) > 40) offenders.push(`${file}: ${m[0]}`);
+    }
+    if (/--ember\b|\bember\b/i.test(text)) offenders.push(`${file}: the word "ember"`);
+  }
+
+  it('has no orange or ember colour literals', () => {
+    expect(offenders).toEqual([]);
+  });
+});
