@@ -2,6 +2,7 @@
 // judged by eye instead of by "the code ran". Frames are deterministic:
 // scrolling is stepped and animations are given settle time.
 import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { chromium } from 'playwright-core';
 
 const EXE =
@@ -9,6 +10,9 @@ const EXE =
   '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
 
 const url = process.env.TARGET_URL ?? 'http://localhost:5173/';
+// join() at the write site rather than concatenating: an OUT_DIR supplied
+// without a trailing slash used to mkdir the folder and then write the frames
+// one level up beside it, because `${outDir}${name}` is just string glue.
 const outDir = process.env.OUT_DIR ?? new URL('../shots/', import.meta.url).pathname;
 mkdirSync(outDir, { recursive: true });
 
@@ -57,7 +61,7 @@ for (const viewport of viewports) {
   for (const shot of shots) {
     await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), Math.round(height * shot.y));
     await page.waitForTimeout(950);
-    await page.screenshot({ path: `${outDir}${viewport.name}-${shot.name}.png` });
+    await page.screenshot({ path: join(outDir, `${viewport.name}-${shot.name}.png`) });
   }
 
   const overflow = await page.evaluate(() => {

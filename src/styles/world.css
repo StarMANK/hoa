@@ -618,15 +618,25 @@
   .rail a span:last-child { width: 0.9rem; }
   .rail a.is-active span:last-child { width: 1.4rem; }
 
-  /* The fold is already full on a phone: keep the two lead walkers, drop them
-     below the CTAs, and dim them so they never fight the buttons for read. */
+  /* The fold on a phone is narrow, so the line steps down further and enters
+     flush with the edge. Three things were killing it here. The container sat
+     at 0.5 on top of the per-walker ramp, so the lead ape rendered at 0.21 and
+     stopped being the subject. The mask dissolved the first third of the track,
+     which is exactly where the head walker stands once the desktop padding is
+     gone. And the line was seated high enough that its head crossed the
+     outlined secondary CTA. Measured on a 390x844 fold: the buttons end at
+     y=691 and the rail starts at 796, so at this offset the tallest ape spans
+     700-800 - clear of the copy, feet passing behind the rail panel, which is
+     where a rail should read anyway. */
   .procession {
     gap: 0.8rem;
     padding-left: 1rem;
-    bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
-    opacity: 0.5;
+    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+    mask-image: linear-gradient(90deg, #000 0%, #000 82%, transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 82%, transparent 100%);
   }
-  .procession__walker:nth-child(n + 3) { display: none; }
+  /* Restoring the full kawanan rather than the two lead walkers: at 0.52 five
+     of them span 242px, so the line still fits the narrow fold. */
   .procession__walker {
     width: calc(var(--h, 160px) * 0.52);
     height: calc(var(--h, 160px) * 0.5);
