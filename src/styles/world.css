@@ -503,22 +503,17 @@
      the subject and the call to action both need to be unmistakable. */
   padding-left: clamp(1rem, 38vw, 34rem);
   pointer-events: none;
-  /* Both ends dissolve: the head of the line emerges out of the dark beside the
-     copy, the tail walks off behind the logo plate. */
-  mask-image: linear-gradient(
-    90deg,
-    transparent 33%,
-    #000 41%,
-    #000 78%,
-    transparent 99%
-  );
-  -webkit-mask-image: linear-gradient(
-    90deg,
-    transparent 33%,
-    #000 41%,
-    #000 78%,
-    transparent 99%
-  );
+  /* Only the head dissolves, into the dark beside the copy. The tail dissolve was
+     the wrong idea: measured with mask-aware effective opacity, the ramp
+     78%->99% cut the line's own opacity ramp in half - the per-walker ramp runs
+     0.42 up to 0.88 left to right, so the ramp erased the apes the design had just
+     made brightest, taking walker #4 from 0.88 down to a painted 0.171. And the
+     occluder it was dissolving behind does not exist: scripts/proccover.mjs puts
+     the logo plate at y 162-594 and the procession at y 664-864, a 70px gap, so the
+     line never passes under it. Nothing is overflowing either - the container ends
+     60px short of the viewport edge, so the tail ape is simply standing there. */
+  mask-image: linear-gradient(90deg, transparent 30%, #000 40%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 30%, #000 40%);
 }
 
 .procession__walker {
@@ -639,8 +634,11 @@
     gap: 0.8rem;
     padding-left: 1rem;
     bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
-    mask-image: linear-gradient(90deg, #000 0%, #000 82%, transparent 100%);
-    -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 82%, transparent 100%);
+    /* No mask at all. The tail ramp started at 82% of a 370px container while
+       walker #3 begins at 81.3%, so it erased the right half of an ape that is
+       fully inside the viewport, and walker #4 down to a painted 0.119. */
+    mask-image: none;
+    -webkit-mask-image: none;
   }
   /* Restoring the full kawanan rather than the two lead walkers: at 0.52 five
      of them span 242px, so the line still fits the narrow fold. */
