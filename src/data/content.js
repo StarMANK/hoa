@@ -22,7 +22,6 @@ export const marqueeWords = [
   'BLASTERAN GORILLA BABI',
   'ORIGIN TRAIL',
   '2024',
-  'JOSGC',
   'BEYOND FPS',
   'HALL OF APES',
 ];
