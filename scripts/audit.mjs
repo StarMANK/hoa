@@ -64,7 +64,10 @@ for (const vp of [
     });
 
   // Mid-page: park on the trail, then read what the apes resolved to.
-  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight * 0.3));
+  // behavior:'instant' - html sets scroll-behavior: smooth, so a bare scrollTo glides and
+  // the 900ms wait can land mid-flight, which reports a --scroll-progress from somewhere
+  // between the hero and the trail rather than from the trail.
+  await page.evaluate(() => scrollTo({ top: document.body.scrollHeight * 0.3, behavior: 'instant' }));
   await page.waitForTimeout(900);
 
   const at = async () => {

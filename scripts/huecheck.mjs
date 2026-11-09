@@ -59,17 +59,35 @@ const EMBER = `
 
 const failures = [];
 
+// Mobile is measured as well as desktop. The static palette guard can only say no ember
+// literal is in the stylesheet; it cannot say what composites once blend modes, backdrop
+// filters and the grain overlay have had them. Mobile is a different composite because the
+// media queries re-seat the world entirely and the viewport is a third the width, so the
+// same rule lands on different pixels. A desktop-only pixel check would miss that.
 for (const [label, scrollFrac, control] of [
   ['hero', 0, false],
   ['mid-page', 0.4, false],
   ['join band', 0.95, false],
+  ['mobile hero', 0, false],
+  ['mobile join band', 0.95, false],
   ['ember control', 0, true],
 ]) {
-  const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 } })).newPage();
+  const mobile = label.startsWith('mobile');
+  const page = await (
+    await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 } })
+  ).newPage();
   await page.goto('http://localhost:5173/', { waitUntil: 'networkidle' });
   await page.waitForTimeout(1200);
-  await page.evaluate((f) => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * f), scrollFrac);
+  // behavior:'instant' because the site sets scroll-behavior: smooth. Without it this is
+  // a request that takes ~500ms to fulfil, and the screenshot below can land mid-glide -
+  // which means the two deeper depths silently measured somewhere near the hero. Same bug
+  // bandtext.mjs had: it logged "scrolled to y0" and believed itself.
+  await page.evaluate((f) => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) * f, behavior: 'instant' }), scrollFrac);
   await page.waitForTimeout(900);
+  const settledY = await page.evaluate(() => Math.round(scrollY));
+  if (!control && scrollFrac > 0 && settledY === 0) {
+    failures.push(`${label}: asked to scroll to ${scrollFrac} of the page and ended at scrollY 0, so this measured the hero`);
+  }
   if (control) await page.evaluate(() => document.body.insertAdjacentHTML('beforeend', '<div class="ember-control"></div>'));
   await page.addStyleTag({ content: EMBER });
   await page.addStyleTag({ content: '*, *::before, *::after { animation-play-state: paused !important; }' });
@@ -109,7 +127,7 @@ for (const [label, scrollFrac, control] of [
   const frac = hued / total;
   const top = [...buckets.entries()].sort((a, b) => b[1] - a[1]).slice(0, 4);
   console.log(
-    `[${label}] hued pixels ${hued} of ${total} (${(frac * 100).toFixed(3)}%)` +
+    `[${label}] at scrollY ${settledY}: hued pixels ${hued} of ${total} (${(frac * 100).toFixed(3)}%)` +
       (worst ? `, widest spread ${worst.spread} at rgb(${worst.r},${worst.g},${worst.b})` : ''),
   );
   for (const [rgb, n] of top) {
