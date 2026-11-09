@@ -1,0 +1,255 @@
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--night);
+  color: var(--bone);
+  font-family: var(--font-body);
+  font-size: var(--step-body);
+  line-height: 1.65;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+
+:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.shell {
+  width: var(--shell);
+  margin-inline: auto;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 0.82;
+  letter-spacing: -0.015em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.micro {
+  font-family: var(--font-mono);
+  font-size: var(--step-micro);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.h2 { font-size: var(--step-h2); }
+.h3 { font-size: var(--step-h3); line-height: 0.95; }
+
+.lead {
+  font-size: clamp(1.1rem, 1.6vw, 1.45rem);
+  line-height: 1.55;
+  font-weight: 500;
+  max-width: 34ch;
+}
+
+.body-copy { max-width: 56ch; }
+
+/* One word per heading gets the solid accent, nothing more. */
+.accent-word { color: var(--accent); }
+.tag-accent {
+  display: inline-block;
+  padding: 0 0.08em;
+  background: var(--accent);
+  color: var(--night);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* Buttons invert against the night world: the page is dark, so the primary
+   action has to be the brightest thing on screen. */
+.cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 1.05rem 1.5rem;
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--night);
+  font-family: var(--font-mono);
+  font-size: var(--step-micro);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  overflow: hidden;
+  isolation: isolate;
+  transition: color var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+.cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--night);
+  transform: translateY(101%);
+  transition: transform var(--dur) var(--ease-snap);
+}
+
+.cta:hover,
+.cta:focus-visible {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* The sweep alone is not enough contrast on every background, so keyboard
+   focus keeps its own ring. */
+.cta:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.cta:hover::before,
+.cta:focus-visible::before { transform: translateY(0); }
+
+.cta:active { transform: translateY(2px); }
+
+.cta--ghost {
+  background: transparent;
+  color: var(--accent);
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.cta--ghost::before { background: var(--accent); }
+
+.cta--ghost:hover,
+.cta--ghost:focus-visible { color: var(--night); border-color: var(--accent); }
+
+.cta--onDark { border-color: var(--bone); color: var(--bone); background: transparent; }
+.cta--onDark::before { background: var(--bone); }
+.cta--onDark:hover,
+.cta--onDark:focus-visible { color: var(--on-accent); border-color: var(--bone); }
+
+.icon { width: 1.15em; height: 1.15em; flex: none; }
+
+.band-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: var(--accent);
+}
+
+.band-label::after {
+  content: '';
+  height: 2px;
+  flex: 1;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.section {
+  position: relative;
+  z-index: 2;
+  /* Symmetric 12vw left a 173px dead tail under the last row of both content
+     bands at 1440. The head keeps the breathing room; the tail is tight because
+     the next band's own head provides the separation. */
+  padding-block: clamp(4rem, 9vw, 7.5rem) clamp(2.2rem, 3.5vw, 3rem);
+}
+
+.section--dark {
+  /* Kept at the same wash as .trail and .join: these bands are all at z-index 2
+     above the fixed roam layer, so every point of alpha here subtracts directly from
+     the silhouettes crossing behind the copy. See the note in trail.css. */
+  background: rgba(3, 4, 5, 0.22);
+  color: var(--bone);
+}
+
+.section-head {
+  display: grid;
+  gap: 1.1rem;
+  margin-bottom: clamp(2.5rem, 6vw, 5rem);
+}
+
+@media (min-width: 62rem) {
+  .section-head {
+    grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 0.6fr);
+    align-items: end;
+    gap: clamp(2rem, 5vw, 4rem);
+  }
+}
+
+/* Reveal system: the world moves into frame, elements do not just fade. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 2.2rem, 0);
+  filter: blur(6px);
+  transition: opacity var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
+}
+
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+.reveal[data-delay='1'] { transition-delay: 0.08s; }
+.reveal[data-delay='2'] { transition-delay: 0.16s; }
+.reveal[data-delay='3'] { transition-delay: 0.24s; }
+.reveal[data-delay='4'] { transition-delay: 0.32s; }
+.reveal[data-delay='5'] { transition-delay: 0.4s; }
+
+.carve {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.4s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 0.12s);
+}
+
+.is-in .carve,
+.carve.is-in { stroke-dashoffset: 0; }
+
+.mark-dot {
+  fill: currentColor;
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out) 1s;
+}
+
+.is-in .mark-dot { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal { opacity: 1; transform: none; filter: none; }
+  .carve { stroke-dasharray: none; stroke-dashoffset: 0; }
+  .mark-dot { opacity: 1; }
+}

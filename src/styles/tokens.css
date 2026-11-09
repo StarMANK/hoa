@@ -1,0 +1,69 @@
+/* Hall Of Apes design tokens.
+
+   Measured off hoa_logo.png with scripts/palette.mjs: 890,036 opaque pixels,
+   exactly one colour in them, #ffffff, max channel delta 0, mean saturation 0.
+   The mark is pure white and completely achromatic, so the accent IS the logo:
+   --accent is #ffffff, not an approximation of it. #fcfcfc sat here for a while
+   on a note claiming to be the sample; it was neither the sample nor far enough
+   from it to defend - 1.026:1 against #ffffff, under the ~1.05:1 humans can
+   separate on a uniform field. There is no hue to match, so there is nothing to
+   tune: white. Colour on this page comes from depth (layers fading toward the
+   night), never from a hue. */
+:root {
+  --night: #060809;
+  /* Used once each, in a sky gradient and a card fill. Not a ramp. */
+  --night-2: #0b0f11;
+  --night-3: #131a1c;
+  /* The treeline. Foliage sits a hair off the page void so the bands separate
+     from --night without reaching for a hue. */
+  --canopy: #070b09;
+
+  /* --bone is the second voice: same lightness band as the accent but warm, so
+     copy can read as quieter without dropping into a grey that would go blue on
+     the cool night. */
+  --bone: #f3f0e7;
+  --bone-2: #e7e2d4;
+
+  /* The single accent, straight off the logo. 20.1:1 on --night. */
+  --accent: #ffffff;
+  /* 7.4:1 on --night: the floor for the small mono labels that use it. */
+  --accent-dim: rgba(255, 255, 255, 0.62);
+
+  /* Copy on the accent-filled bands inverts to the page void. */
+  --on-accent: var(--night);
+
+  /* Hairlines and rule fills. Was two tokens 0.02 alpha apart, which is below
+     what this background can show. */
+  --rule: rgba(255, 255, 255, 0.17);
+
+  --font-display: Anton, 'Archivo Black', Impact, sans-serif;
+  --font-body: 'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Courier New', monospace;
+
+  --shell: min(1320px, calc(100% - 2.5rem));
+  --step-hero: clamp(3.4rem, 13vw, 12rem);
+  --step-poster: clamp(2.4rem, 8vw, 7rem);
+  --step-h2: clamp(2.2rem, 6vw, 5.2rem);
+  --step-h3: clamp(1.4rem, 2.6vw, 2.1rem);
+  --step-body: clamp(1rem, 1.15vw, 1.18rem);
+  --step-micro: clamp(0.66rem, 0.75vw, 0.76rem);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-snap: cubic-bezier(0.83, 0, 0.17, 1);
+  --dur-fast: 0.22s;
+  --dur: 0.5s;
+  --dur-slow: 0.9s;
+
+  --px: 0;
+  --py: 0;
+  --gx: 50vw;
+  --gy: 40vh;
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --scroll-glow: 0;
+  --scroll-progress: 0;
+  /* Written per element by useVisibleProgress onto the element that carries the
+     transform. Declared here so reduced motion and anything outside a tracked
+     element still resolve it instead of dropping the calc that uses it. */
+  --visible-progress: 0;
+}
