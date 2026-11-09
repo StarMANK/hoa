@@ -3,6 +3,7 @@
 import { chromium } from 'playwright-core';
 
 const EXE =
+  process.env.CHROME_PATH ??
   '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
 
 const browser = await chromium.launch({

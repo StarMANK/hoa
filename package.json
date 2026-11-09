@@ -7,7 +7,22 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gates": "npm run gate:apes && npm run gate:bandtext && npm run gate:canopy && npm run gate:hue && npm run gate:mask && npm run gate:apescroll && npm run gate:fold && npm run gate:hint && npm run gate:proclegible && npm run gate:procspeed && npm run gate:travel && npm run gate:a11y",
+    "gate:apes": "node scripts/apes.mjs",
+    "gate:apescroll": "node scripts/apescroll.mjs",
+    "gate:a11y": "node scripts/a11y.mjs",
+    "gate:bandtext": "node scripts/bandtext.mjs",
+    "gate:canopy": "node scripts/canopydepth.mjs",
+    "gate:fold": "node scripts/fold.mjs",
+    "gate:hint": "node scripts/hintlegible.mjs",
+    "gate:hue": "node scripts/huecheck.mjs",
+    "gate:mask": "node scripts/maskcheck.mjs",
+    "gate:proclegible": "node scripts/proclegible.mjs",
+    "gate:procspeed": "node scripts/procspeed.mjs",
+    "gate:travel": "node scripts/travel.mjs",
+    "shots": "node scripts/shoot.mjs && node scripts/marks.mjs && node scripts/settle.mjs && node scripts/trailshots.mjs",
+    "apeshape": "node scripts/apeshape.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

@@ -1,5 +1,8 @@
-// Skeleton-driven ape silhouettes. Reference: dist/assets/ape-inspo.jpeg - a
-// procession of hunched bipeds, largest to smallest, some carrying a spear.
+// Skeleton-driven ape silhouettes: hunched bipeds, largest to smallest, some
+// carrying a spear. This is the tool the paths in src/components/Apes.jsx were
+// tuned with: it renders in isolation and writes shots/ape-shape.png so a shape
+// can be judged by eye before its path is copied into the component. Running it
+// changes nothing on screen.
 //
 // Limbs are round-capped strokes, thick for the thigh/upper arm and thin for the
 // shin/forearm, so the silhouette tapers instead of reading as sausages. The head
@@ -164,7 +167,9 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 </style></head><body>${rows}</body></html>`;
 
 const b = await chromium.launch({
-  executablePath: '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome',
+  executablePath:
+    process.env.CHROME_PATH ??
+    '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome',
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
 const c = await b.newContext({ viewport: { width: 1500, height: 1560 }, deviceScaleFactor: 2 });

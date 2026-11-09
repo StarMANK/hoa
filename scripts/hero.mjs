@@ -1,6 +1,8 @@
 import { chromium } from 'playwright-core';
 
-const EXE = '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
+const EXE =
+  process.env.CHROME_PATH ??
+  '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome';
 const browser = await chromium.launch({
   executablePath: EXE,
   args: ['--no-sandbox', '--disable-dev-shm-usage'],

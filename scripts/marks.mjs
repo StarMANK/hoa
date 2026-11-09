@@ -1,7 +1,9 @@
 import { chromium } from 'playwright-core';
 
 const b = await chromium.launch({
-  executablePath: '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome',
+  executablePath:
+    process.env.CHROME_PATH ??
+    '/home/starmank/.cache/ms-playwright/chromium-1243/chrome-linux64/chrome',
   args: ['--no-sandbox', '--disable-dev-shm-usage'],
 });
 const c = await b.newContext({ viewport: { width: 900, height: 500 }, deviceScaleFactor: 2 });
