@@ -28,7 +28,9 @@ visible pixels. `npm run gate:bandtext` holds the other side of the deal, text
 legible while an ape crosses behind it.
 
 The favicon is the logo itself: a square crop of the procession from
-`hoa_logo.png` (`public/favicon.png`, `apple-touch-icon.png`).
+`hoa_logo.png` (`public/favicon.png`, `apple-touch-icon.png`), regenerated
+deterministically by `npm run favicon` (`scripts/favicon.mjs`, no browser,
+byte-stable output).
 
 ## Running it
 

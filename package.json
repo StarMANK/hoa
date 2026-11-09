@@ -22,6 +22,7 @@
     "gate:procspeed": "node scripts/procspeed.mjs",
     "gate:travel": "node scripts/travel.mjs",
     "shots": "node scripts/shoot.mjs && node scripts/marks.mjs && node scripts/settle.mjs && node scripts/trailshots.mjs",
+    "favicon": "node scripts/favicon.mjs",
     "apeshape": "node scripts/apeshape.mjs"
   },
   "dependencies": {
