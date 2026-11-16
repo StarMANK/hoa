@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
-    "gates": "npm run gate:apes && npm run gate:bandtext && npm run gate:canopy && npm run gate:hue && npm run gate:mask && npm run gate:apescroll && npm run gate:fold && npm run gate:hint && npm run gate:proclegible && npm run gate:procspeed && npm run gate:travel && npm run gate:a11y",
+    "gates": "npm run gate:apes && npm run gate:bandtext && npm run gate:canopy && npm run gate:hue && npm run gate:mask && npm run gate:apescroll && npm run gate:fold && npm run gate:hint && npm run gate:proclegible && npm run gate:procspeed && npm run gate:travel && npm run gate:a11y && npm run gate:railclear",
     "gate:apes": "node scripts/apes.mjs",
     "gate:apescroll": "node scripts/apescroll.mjs",
     "gate:a11y": "node scripts/a11y.mjs",
@@ -23,18 +23,21 @@
     "gate:travel": "node scripts/travel.mjs",
     "shots": "node scripts/shoot.mjs && node scripts/marks.mjs && node scripts/settle.mjs && node scripts/trailshots.mjs",
     "favicon": "node scripts/favicon.mjs",
-    "apeshape": "node scripts/apeshape.mjs"
+    "apeshape": "node scripts/apeshape.mjs",
+    "heroimg": "node scripts/heroimg.mjs",
+    "gate:railclear": "node scripts/railclear.mjs"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "vite": "^6.0.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "jsdom": "^26.0.0",
+    "playwright-core": "^1.65.1",
     "vitest": "^2.1.8"
   }
 }

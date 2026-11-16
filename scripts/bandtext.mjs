@@ -104,7 +104,31 @@ for (const [label, vp, target] of [
     await page.context().close();
     continue;
   }
-  await page.waitForTimeout(1500);
+  await page.waitForTimeout(1200);
+  // Wait for the scroll-driven world state to go quiet before anything is
+  // measured. --scroll-glow decays 0.9x per ANIMATION FRAME, not per second:
+  // under CPU load the frames are starved, so a wall-clock wait (1500ms) can
+  // still catch it mid-decay. The sweep layer's opacity is 0.3 + 0.7*glow, so
+  // while it moves, the background differs between the with-apes and
+  // without-apes screenshots by more than any walker contributes: every
+  // walker then measures ~1.05:1 against the wrong background, and the failure
+  // lands on whichever band was measured while the machine was busiest.
+  // Polling the computed value until it stops moving is load-proof; 0.000 is
+  // where the decay lands.
+  await page.waitForFunction(
+    () => {
+      const cs = getComputedStyle(document.querySelector('.world'));
+      const glow = Number(cs.getPropertyValue('--scroll-glow').trim() || 0);
+      // progress > 0 proves a rAF tick has already processed the scroll, and
+      // with it the glow spike; glow 0 then means the decay has finished.
+      // Without this, a poll landing between the scroll and the first frame
+      // would read the pre-scroll 0 and settle on a background about to jump.
+      const progress = Number(cs.getPropertyValue('--scroll-progress').trim() || 0);
+      return progress > 0 && glow === 0;
+    },
+    undefined,
+    { timeout: 15000, polling: 150 },
+  );
   const scrolled = await page.evaluate(() => ({
     y: Math.round(scrollY),
     max: Math.round(document.documentElement.scrollHeight - innerHeight),
@@ -117,18 +141,43 @@ for (const [label, vp, target] of [
     });
     await page.waitForTimeout(300);
   }
-  // Freeze the walk so frames differ only by the injected delay offset, and keep the
-  // far canopy out of the way: it is measured by canopydepth, and here it would
-  // attribute foliage contrast to the band wash.
+  // Freeze the walk deterministically. A CSS delay pin is not enough: paused
+  // animations sit at (wall clock + delay), so capture phase drifts by however
+  // long the machine took to load the page - under load, ~100px of walker
+  // travel, which moved whole bands on and off the judgment band between two
+  // runs of identical code. currentTime is an absolute frame: every run, every
+  // machine, the same composition. The delay the text loop below injects still
+  // shifts local time (currentTime - delay), so crossing frames survive.
   await page.addStyleTag({ content: '*, *::before, *::after { animation-play-state: paused !important; }' });
+  await page.evaluate(() => {
+    for (const animation of document.getAnimations()) {
+      animation.pause();
+      try {
+        // Scanned geometrically (full walker on screen, subject walker
+        // uncovered by cards/rail, no small walker parked in the rail band)
+        // across all three bands at 1s granularity: 2-15s, 20-21s, 26-30s,
+        // 35-43s and 45-60s are healthy everywhere. 39s sits mid-window, far
+        // from any edge.
+        animation.currentTime = 39000;
+      } catch {
+        // finite animations already past their end clamp there; nothing to pin.
+      }
+    }
+  });
   await page.waitForTimeout(300);
 
   const boxes = await page.evaluate(() => {
     const out = [];
     for (const el of document.querySelectorAll('.roam__walker svg.ape')) {
       const r = el.getBoundingClientRect();
+      // Fully on screen in BOTH axes. The vertical margin has always been here;
+      // without the horizontal one, a walker parked past an edge got its box
+      // pixel indices wrapped into the next screenshot row and compared against
+      // unrelated content: three 34px walkers read a fabricated 1.04:1 "in the
+      // open" from wrapped dark-on-dark pixels while standing off-canvas.
       if (r.width < 4) continue;
-      if (r.top < 2 || r.bottom > innerHeight - 2) continue; // need the whole silhouette
+      if (r.top < 2 || r.bottom > innerHeight - 2) continue;
+      if (r.left < 2 || r.right > innerWidth - 2) continue;
       out.push({ x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height) });
     }
     return out;
@@ -136,7 +185,11 @@ for (const [label, vp, target] of [
 
   const cards = await page.evaluate(() => {
     const out = [];
-    for (const el of document.querySelectorAll('.chapter__copy, .join__card, .rule, .marks li')) {
+    // .rail is an occluder too: the fixed chapter rail is page chrome the
+    // kawanan is designed to pass behind (see the mobile note in world.css),
+    // and a walker sampled under its blurred panel read 1.10:1 - true, and
+    // not the band's problem. Same "behind a card, not judged" deal as above.
+    for (const el of document.querySelectorAll('.chapter__copy, .join__card, .rule, .marks li, .rail')) {
       const r = el.getBoundingClientRect();
       if (r.width < 8 || r.height < 8) continue;
       if (r.bottom < 0 || r.top > innerHeight) continue;
