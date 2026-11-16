@@ -38,6 +38,27 @@ img, svg { display: block; max-width: 100%; }
   border: 0;
 }
 
+/* The skip link is the only .sr-only element anyone can tab to. With the plain
+   clip above it took focus invisibly: measured on the loaded page, focusing it
+   left it at 1px wide at the top edge, so keyboard users got a focus stop with
+   nothing on screen. On focus it becomes a real, visible control. */
+a.sr-only:focus-visible {
+  clip: auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0.7rem 1.1rem;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 30;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-family: var(--font-mono);
+  font-size: var(--step-micro);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .shell {
   width: var(--shell);
   margin-inline: auto;

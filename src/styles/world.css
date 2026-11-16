@@ -450,7 +450,17 @@
   justify-items: start;
 }
 
-.hero__blurb { color: rgba(243, 240, 231, 0.72); }
+.hero__blurb {
+  color: rgba(243, 240, 231, 0.72);
+  /* Stop the box before the walking lane starts. The procession trudge carries
+     the head walker through x554-760 every cycle while the shared 56ch measure
+     ended this copy at x566, so ape #0 sat under the glyphs: 3-4% of the text
+     box, ape on top, which gate:proclegible refuses outright (it measured
+     1.38:1 on a crossing). 40ch ends the box at ~510, clear of the lane; the
+     line reflows to one more line of quiet copy instead of moving the subject
+     or clipping its tail at the viewport edge. */
+  max-width: 40ch;
+}
 
 .hero__tagline { color: rgba(243, 240, 231, 0.74); }
 

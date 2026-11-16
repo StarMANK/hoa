@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import logoUrl from '../hoa_logo.png';
+import logoUrl from './assets/hero-logo.png';
 import {
   brand,
   chapters,

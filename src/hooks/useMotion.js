@@ -110,6 +110,17 @@ export function useScrollGlow(reduced = false) {
     let last = window.scrollY;
     let raf = 0;
     let glow = 0;
+    // Same rule useVisibleProgress follows: write only on change. These vars
+    // feed opacity calcs on full-viewport layers, so an identical write every
+    // frame keeps style invalidation - and repaint of the canopy - alive at 60fps
+    // on a parked page.
+    let lastWritten = { glow: null, progress: null };
+
+    const write = (key, value) => {
+      if (lastWritten[key] === value) return;
+      lastWritten[key] = value;
+      node.style.setProperty(key === 'glow' ? '--scroll-glow' : '--scroll-progress', value);
+    };
 
     const tick = () => {
       const y = window.scrollY;
@@ -120,8 +131,8 @@ export function useScrollGlow(reduced = false) {
         1,
         y / Math.max(1, document.documentElement.scrollHeight - window.innerHeight),
       );
-      node.style.setProperty('--scroll-glow', glow.toFixed(3));
-      node.style.setProperty('--scroll-progress', progress.toFixed(4));
+      write('glow', glow.toFixed(3));
+      write('progress', progress.toFixed(4));
       raf = requestAnimationFrame(tick);
     };
 

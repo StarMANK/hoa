@@ -12,7 +12,7 @@ export function Rail({ items, active, onNavigate }) {
           key={item.id}
           href={`#${item.id}`}
           className={active === item.id ? 'is-active' : ''}
-          aria-current={active === item.id ? 'true' : undefined}
+          aria-current={active === item.id ? 'page' : undefined}
           onClick={(event) => onNavigate(event, item.id)}
         >
           <span>{item.nav}</span>
@@ -233,9 +233,7 @@ export function Join({ join, discord }) {
         </div>
 
         <div className="join__card reveal" data-delay="2">
-          <p className="body-copy" style={{ color: 'rgba(243,240,231,.86)' }}>
-            {join.body}
-          </p>
+          <p className="body-copy join__body">{join.body}</p>
           <div>
             <a className="cta cta--onDark" href={discord}>
               <DiscordGlyph />

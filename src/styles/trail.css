@@ -431,6 +431,8 @@
   clip-path: polygon(0 0, calc(100% - 2rem) 0, 100% 2rem, 100% 100%, 2rem 100%, 0 calc(100% - 2rem));
 }
 
+.join__body { color: rgba(243, 240, 231, 0.86); }
+
 .join__meta {
   display: grid;
   gap: 0.5rem;
@@ -475,6 +477,23 @@
 .foot__legal { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); max-width: 44ch; margin: 0; }
 
 @media (min-width: 62rem) {
+  /* The fixed chapter rail is ~108px wide with its right edge at most 1.6vw in
+     from the viewport. The shell is centered, so from 62rem until the shell
+     stops growing (~100rem) the content's right edge runs under the rail:
+     measured at 1440px the rail's left edge (1309) bit 51-64px into the
+     handprint and gorilla art, and sat over the join card's border. Reserving
+     a rail-width gutter on the right of every shell keeps content clear of the
+     nav at every width in that range; the gutter only exists while a collision
+     is possible. */
+  .shell { padding-inline-end: 8.5rem; }
+
+  /* Past 100rem the centered 1320px shell clears the rail on its own (rail
+     left edge = W - 25.6 - 108.3 crosses the shell right edge = W/2 + 660 at
+     ~1587px), so the gutter goes away rather than leaving dead space. */
+  @media (min-width: 100rem) {
+    .shell { padding-inline-end: 0; }
+  }
+
   .chapter { grid-template-columns: 0.72fr 1.28fr 0.8fr; }
   .chapter--flip { grid-template-columns: 0.8fr 1.28fr 0.72fr; }
   .chapter--flip .chapter__year { order: 3; justify-self: end; }
@@ -488,4 +507,10 @@
   .chapter { grid-template-columns: 1fr; }
   .chapter__mark { order: 3; }
   .trail__thread { left: 0.9rem; }
+
+  /* The rail docks bottom-center on touch, ~54px tall. Measured on a 390x844
+     page at the very bottom, the rail's top edge (y=796) sat over the footer's
+     legal line (y bottom 818): the last thing you read was behind the nav. The
+     footer keeps its own floor clear of the dock instead. */
+  .foot { padding-block-end: calc(4.75rem + env(safe-area-inset-bottom, 0px)); }
 }
